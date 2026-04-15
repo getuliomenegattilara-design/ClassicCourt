@@ -808,6 +808,7 @@ async function registrarPartida() {
     } else {
         const ids = ['d-j1','d-j2','d-j3','d-j4'].map(i => document.getElementById(i).value);
         if (ids.some(v => !v)) { alerta('erro', 'Selecione todos os jogadores das duplas.'); return; }
+        if (new Set(ids).size < 4) { alerta('erro', 'Os 4 jogadores devem ser diferentes.'); return; }
         if (!ids.includes(String(meuJogador.id))) { alerta('erro', 'Voce precisa ser um dos jogadores da partida.'); return; }
         partida.dupla1_j1_id = parseInt(ids[0]); partida.dupla1_j2_id = parseInt(ids[1]);
         partida.dupla2_j1_id = parseInt(ids[2]); partida.dupla2_j2_id = parseInt(ids[3]);
