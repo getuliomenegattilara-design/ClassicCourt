@@ -835,17 +835,12 @@ async function registrarPartida() {
 }
 
 async function enviarEmailPartida({ nomes, placar, vencedor, emails }) {
-    const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
-    const token = session?.access_token || SUPA_KEY;
     const payload = JSON.stringify({ nomes, placar, vencedor, emails });
-    console.log('Enviando email:', payload);
-    const res = await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
+    await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
         body: payload
     });
-    const data = await res.text();
-    console.log('Resposta email:', data);
 }
 
 async function carregarHistorico() {
