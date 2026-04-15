@@ -267,7 +267,7 @@ async function fazerCadastro() {
         localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
 
         // Cria jogador vinculado ao usuario
-        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, user_id: data.user.id }) });
+        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, email, user_id: data.user.id }) });
 
         window.location.href = 'index.html';
     } catch(e) {

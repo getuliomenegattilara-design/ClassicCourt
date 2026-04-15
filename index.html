@@ -300,10 +300,29 @@
                             <input type="text" class="form-control" id="txtJogador" placeholder="Nome do jogador..." maxlength="100">
                         </div>
                         <div class="mb-3">
+                            <label class="form-label">Sexo</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sexo" id="sexo-m" value="M" checked>
+                                    <label class="form-check-label" for="sexo-m" style="font-size:13px">Masculino</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="sexo" id="sexo-f" value="F">
+                                    <label class="form-check-label" for="sexo-f" style="font-size:13px">Feminino</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label">Foto</label>
                             <div class="foto-wrap">
                                 <img id="foto-preview" class="foto-preview" src="">
                                 <label class="btn-upload"><i class="bi bi-camera me-1"></i> Escolher foto<input type="file" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)"></label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="fofoqueiro">
+                                <label class="form-check-label" for="fofoqueiro" style="font-size:13px"><i class="bi bi-bell me-1" style="color:var(--verde)"></i> Receber email de todos os jogos</label>
                             </div>
                         </div>
                         <button class="btn-verde w-100" onclick="salvarJogador()" id="btn-jogador"><i class="bi bi-floppy me-1"></i> Salvar</button>
@@ -433,6 +452,25 @@
             <div class="modal-body p-3">
                 <input type="hidden" id="edit-jogador-id">
                 <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" id="edit-jogador-nome" maxlength="100"></div>
+                <div class="mb-3">
+                    <label class="form-label">Sexo</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="edit-sexo" id="edit-sexo-m" value="M">
+                            <label class="form-check-label" for="edit-sexo-m" style="font-size:13px">Masculino</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="edit-sexo" id="edit-sexo-f" value="F">
+                            <label class="form-check-label" for="edit-sexo-f" style="font-size:13px">Feminino</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="edit-fofoqueiro">
+                        <label class="form-check-label" for="edit-fofoqueiro" style="font-size:13px"><i class="bi bi-bell me-1" style="color:var(--verde)"></i> Receber email de todos os jogos</label>
+                    </div>
+                </div>
                 <div>
                     <label class="form-label">Foto</label>
                     <div class="foto-wrap">
@@ -597,7 +635,7 @@ function previewFotoEdit(input) {
 // Jogadores
 // =============================================
 async function carregarJogadores() {
-    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,criado_em&order=nome.asc') || [];
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,criado_em&order=nome.asc') || [];
     const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
 
     const stats = {};
@@ -611,19 +649,24 @@ async function carregarJogadores() {
     });
 
     const tb = document.getElementById('tb-jogadores');
+    const meuId = getUserId();
     if (!jogadores.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhum jogador cadastrado.</td></tr>'; return; }
-    tb.innerHTML = jogadores.map(j => `
-        <tr>
-            <td class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} ${j.nome}</td>
+    tb.innerHTML = jogadores.map(j => {
+        const ehMeu = j.user_id === meuId;
+        const botoes = ehMeu ? `
+            <button class="btn-act edit" onclick="abrirEditJogador(${j.id},'${j.nome.replace(/'/g,"\\'")}','${j.foto_url||''}','${j.sexo||'M'}',${!!j.fofoqueiro})"><i class="bi bi-pencil"></i></button>
+            <button class="btn-act del"  onclick="deletarJogador(${j.id})"><i class="bi bi-trash"></i></button>
+        ` : '';
+        const sexoIcon = j.sexo === 'F' ? '<i class="bi bi-gender-female" style="color:#f472b6;font-size:11px" title="Feminino"></i>' : '<i class="bi bi-gender-male" style="color:#60a5fa;font-size:11px" title="Masculino"></i>';
+        const fofoIcon = j.fofoqueiro ? '<i class="bi bi-bell-fill" style="color:var(--verde);font-size:11px" title="Recebe todos os emails"></i>' : '';
+        return `<tr>
+            <td><div class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} ${j.nome} ${sexoIcon} ${fofoIcon}</div></td>
             <td style="color:var(--muted);font-size:12px">${fmtData(j.criado_em)}</td>
             <td><span class="badge-v">${stats[j.id]?.v||0}V</span></td>
             <td><span class="badge-d">${stats[j.id]?.d||0}D</span></td>
-            <td>
-                <button class="btn-act edit" onclick="abrirEditJogador(${j.id},'${j.nome.replace(/'/g,"\\'")}','${j.foto_url||''}')"><i class="bi bi-pencil"></i></button>
-                <button class="btn-act del"  onclick="deletarJogador(${j.id})"><i class="bi bi-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
+            <td>${botoes}</td>
+        </tr>`;
+    }).join('');
 }
 
 async function salvarJogador() {
@@ -636,22 +679,29 @@ async function salvarJogador() {
         const existente = jogadores.find(j => j.nome.trim().toLowerCase() === nome.toLowerCase());
         if (existente) { alerta('erro', `Ja existe um jogador chamado "${existente.nome}". Use o nome completo ou adicione o sobrenome.`); return; }
 
+        const sexo = document.querySelector('input[name="sexo"]:checked')?.value || 'M';
+        const fofoqueiro = document.getElementById('fofoqueiro').checked;
         let foto_url = null;
         const file = document.getElementById('foto-input').files[0];
         if (file) foto_url = await uploadFoto(file, nome);
-        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, foto_url }) });
+        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, sexo, fofoqueiro, foto_url }) });
         document.getElementById('txtJogador').value = '';
         document.getElementById('foto-input').value = '';
         document.getElementById('foto-preview').style.display = 'none';
+        document.getElementById('fofoqueiro').checked = false;
+        document.getElementById('sexo-m').checked = true;
         alerta('ok', 'Jogador cadastrado!');
         carregarJogadores();
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Salvar'; }
 }
 
-function abrirEditJogador(id, nome, fotoUrl) {
+function abrirEditJogador(id, nome, fotoUrl, sexo, fofoqueiro) {
     document.getElementById('edit-jogador-id').value   = id;
     document.getElementById('edit-jogador-nome').value = nome;
+    document.getElementById('edit-sexo-m').checked = (sexo !== 'F');
+    document.getElementById('edit-sexo-f').checked = (sexo === 'F');
+    document.getElementById('edit-fofoqueiro').checked = !!fofoqueiro;
     const prev = document.getElementById('edit-foto-preview');
     if (fotoUrl) { prev.src = fotoUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
     modalEditJogador.show();
@@ -661,7 +711,9 @@ async function confirmarEditJogador() {
     const id   = document.getElementById('edit-jogador-id').value;
     const nome = document.getElementById('edit-jogador-nome').value.trim();
     if (!nome) { alerta('erro', 'Informe o nome.'); return; }
-    let dados = { nome };
+    const sexo = document.querySelector('input[name="edit-sexo"]:checked')?.value || 'M';
+    const fofoqueiro = document.getElementById('edit-fofoqueiro').checked;
+    let dados = { nome, sexo, fofoqueiro };
     const file = document.getElementById('edit-foto-input').files[0];
     if (file) dados.foto_url = await uploadFoto(file, nome);
     await supaFetch(`jogadores?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify(dados) });
@@ -742,14 +794,58 @@ async function registrarPartida() {
         const partidaId = res[0].id;
         for (const s of sets) await supaFetch('sets', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ ...s, partida_id: partidaId }) });
         ['s1l1','s1l2','s2l1','s2l2','s3l1','s3l2'].forEach(id => document.getElementById(id).value = '');
-        alerta('ok', `Partida registrada! Vencedor: Lado ${vencedor}`);
+
+        // Monta dados para email
+        let nomesLado1, nomesLado2, emailsJogadores = [];
+        if (tipo === 'simples') {
+            const j1 = jogadores.find(j => j.id == partida.jogador1_id);
+            const j2 = jogadores.find(j => j.id == partida.jogador2_id);
+            nomesLado1 = j1?.nome || '?'; nomesLado2 = j2?.nome || '?';
+            if (j1?.email) emailsJogadores.push(j1.email);
+            if (j2?.email) emailsJogadores.push(j2.email);
+        } else {
+            const j1 = jogadores.find(j => j.id == partida.dupla1_j1_id);
+            const j2 = jogadores.find(j => j.id == partida.dupla1_j2_id);
+            const j3 = jogadores.find(j => j.id == partida.dupla2_j1_id);
+            const j4 = jogadores.find(j => j.id == partida.dupla2_j2_id);
+            nomesLado1 = `${j1?.nome||'?'} / ${j2?.nome||'?'}`;
+            nomesLado2 = `${j3?.nome||'?'} / ${j4?.nome||'?'}`;
+            [j1,j2,j3,j4].forEach(j => { if (j?.email) emailsJogadores.push(j.email); });
+        }
+        const placarStr = sets.map(s => `${s.games_lado1}x${s.games_lado2}`).join(' | ');
+        const vencedorNome = vencedor === 1 ? nomesLado1 : nomesLado2;
+
+        // Inclui fofoqueiros que queiram receber todos os jogos
+        jogadores.filter(j => j.fofoqueiro && j.email).forEach(j => emailsJogadores.push(j.email));
+
+        // Envia email (sem bloquear se falhar)
+        if (emailsJogadores.length) {
+            enviarEmailPartida({
+                nomes: `${nomesLado1} x ${nomesLado2}`,
+                placar: placarStr,
+                vencedor: vencedorNome,
+                emails: [...new Set(emailsJogadores)]
+            }).catch(() => {});
+        }
+
+        alerta('ok', `Partida registrada! Vencedor: ${vencedorNome}`);
         carregarHistorico();
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trophy me-1"></i> Registrar Partida'; }
 }
 
+async function enviarEmailPartida({ nomes, placar, vencedor, emails }) {
+    const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
+    const token = session?.access_token || SUPA_KEY;
+    await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nomes, placar, vencedor, emails })
+    });
+}
+
 async function carregarHistorico() {
-    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id&order=nome.asc') || [];
     preencherSelects();
 
     const filtroId = document.getElementById('filtro-jogador').value;
@@ -766,6 +862,7 @@ async function carregarHistorico() {
     const tb = document.getElementById('tb-historico');
     if (!partidas.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma partida encontrada.</td></tr>'; return; }
 
+    const meuJogadorId = jogadores.find(j => j.user_id === getUserId())?.id;
     tb.innerHTML = partidas.map(p => {
         const pSets = sets.filter(s => s.partida_id === p.id);
         const placar = pSets.map(s => `${s.games_lado1}x${s.games_lado2}`).join(' ');
@@ -777,12 +874,14 @@ async function carregarHistorico() {
             lado2 = `${nomePorId(p.dupla2_j1_id)} / ${nomePorId(p.dupla2_j2_id)}`;
         }
         venc = p.vencedor == 1 ? lado1 : lado2;
+        const idsPartida = [p.jogador1_id, p.jogador2_id, p.dupla1_j1_id, p.dupla1_j2_id, p.dupla2_j1_id, p.dupla2_j2_id];
+        const podeExcluir = meuJogadorId && idsPartida.includes(meuJogadorId);
         return `<tr>
             <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
             <td style="font-size:12px">${lado1} x ${lado2}</td>
             <td style="font-size:12px;color:var(--verde)">${placar}</td>
             <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
-            <td><button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button></td>
+            <td>${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
         </tr>`;
     }).join('');
 }
@@ -800,7 +899,7 @@ async function confirmarDelPartida() {
 // Ranking
 // =============================================
 async function carregarRanking() {
-    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id&order=nome.asc') || [];
     const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
     const sets     = await supaFetch('sets?select=partida_id,games_lado1,games_lado2') || [];
 
@@ -919,7 +1018,7 @@ async function carregarConfronto() {
 // Dashboard
 // =============================================
 async function carregarDashboard() {
-    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id&order=nome.asc') || [];
     const partidas     = await supaFetch('partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor&order=data_partida.desc') || [];
     const sets         = await supaFetch('sets?select=partida_id,numero_set,games_lado1,games_lado2&order=numero_set.asc') || [];
 
@@ -974,7 +1073,7 @@ async function carregarDashboard() {
 // Init
 // =============================================
 (async () => {
-    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id&order=nome.asc') || [];
     carregarDashboard();
 })();
 </script>
