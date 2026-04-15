@@ -16,7 +16,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     const url = new URL(e.request.url);
     if (url.hostname.includes('supabase.co')) {
-        e.respondWith(fetch(e.request));
+        e.respondWith(fetch(e.request.clone()));
         return;
     }
     e.respondWith(caches.match(e.request).then(cached => cached || fetch(e.request)));
