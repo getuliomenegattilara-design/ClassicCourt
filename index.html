@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Court</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2ecc71">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Classic Court">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --verde: #2ecc71;
+            --verde-dark: #27ae60;
+            --bg: #0a0f0d;
+            --surface: #111a15;
+            --surface2: #1a2a20;
+            --text: #e8f5e9;
+            --muted: #7a9e85;
+            --border: #1e3326;
+        }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+        /* Topbar */
+        .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .brand { display: flex; align-items: center; gap: 10px; }
+        .brand .logo { width: 38px; height: 38px; background: var(--verde); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .brand h5 { margin: 0; font-weight: 800; font-size: 18px; }
+        .brand span { color: var(--verde); font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+        .nav-pills .nav-link { color: var(--muted); border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+        .nav-pills .nav-link.active { background: var(--verde); color: #fff; }
+        .nav-pills .nav-link:hover:not(.active) { color: var(--text); background: var(--surface2); }
+
+        /* Cards */
+        .card-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+        .card-stat .num { font-size: 34px; font-weight: 800; color: var(--verde); line-height: 1; }
+        .card-stat .label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+        .card-stat .icon { width: 42px; height: 42px; background: rgba(46,204,113,0.12); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--verde); }
+
+        .section-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+        .section-top { background: var(--surface2); padding: 11px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+        .section-top h6 { margin: 0; font-weight: 700; font-size: 14px; }
+        .icon-box { width: 28px; height: 28px; background: rgba(46,204,113,0.12); border-radius: 7px; display: flex; align-items: center; justify-content: center; color: var(--verde); font-size: 14px; }
+
+        /* Botoes */
+        .btn-verde { background: var(--verde); border: none; color: #fff; font-weight: 600; border-radius: 8px; padding: 8px 18px; transition: background 0.2s; font-size: 14px; cursor: pointer; }
+        .btn-verde:hover { background: var(--verde-dark); color: #fff; }
+        .btn-verde-sm { background: var(--verde); border: none; color: #fff; font-weight: 600; border-radius: 6px; padding: 4px 11px; font-size: 12px; cursor: pointer; transition: background 0.2s; }
+        .btn-verde-sm:hover { background: var(--verde-dark); }
+
+        /* Inputs */
+        .form-control, .form-select, .input-group-text { background: var(--surface2) !important; border-color: var(--border) !important; color: var(--text) !important; }
+        .form-control::placeholder { color: var(--muted) !important; }
+        .form-control:focus, .form-select:focus { box-shadow: 0 0 0 3px rgba(46,204,113,0.2) !important; border-color: var(--verde) !important; }
+        .form-select option { background: var(--surface2); }
+        .input-group-text { color: var(--muted) !important; }
+        .form-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); font-weight: 700; margin-bottom: 5px; }
+
+        /* Tabela */
+        .dark-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .dark-table thead th { background: var(--surface2); color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+        .dark-table tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+        .dark-table tbody tr:last-child td { border-bottom: none; }
+        .dark-table tbody tr:hover { background: rgba(46,204,113,0.03); }
+
+        /* Avatar */
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--verde); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; overflow: hidden; }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-lg { width: 72px; height: 72px; border-radius: 50%; background: var(--verde); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 26px; overflow: hidden; margin: 0 auto 8px; }
+        .avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* Foto preview */
+        .foto-preview { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--verde); display: none; }
+        .foto-wrap { display: flex; align-items: center; gap: 12px; }
+
+        /* Badges */
+        .badge-v { background: rgba(46,204,113,0.15); color: var(--verde); border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+        .badge-d { background: rgba(231,76,60,0.15); color: #e74c3c; border-radius: 6px; padding: 2px 7px; font-size: 11px; font-weight: 700; }
+
+        .btn-act { background: transparent; border: none; border-radius: 4px; padding: 2px 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .btn-act.edit { color: #60a5fa; } .btn-act.edit:hover { background: rgba(59,130,246,0.15); }
+        .btn-act.del  { color: #f87171; } .btn-act.del:hover  { background: rgba(239,68,68,0.15); }
+
+        /* Ranking */
+        .rank-num { width: 22px; height: 22px; border-radius: 50%; background: var(--surface2); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+        .rank-num.gold   { background: rgba(255,193,7,0.2);   color: #ffc107; }
+        .rank-num.silver { background: rgba(150,150,150,0.2); color: #aaa; }
+        .rank-num.bronze { background: rgba(205,127,50,0.2);  color: #cd7f32; }
+
+        /* Set row */
+        .set-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+        .set-row .set-label { font-size: 11px; color: var(--muted); width: 38px; flex-shrink: 0; }
+        .set-row input { width: 58px; text-align: center; }
+        .set-row .sep { color: var(--muted); font-weight: 700; }
+
+        /* Alertas */
+        .alert-ok  { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); color: #6ee7b7; border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+        .alert-err { background: rgba(231,76,60,0.1);  border: 1px solid rgba(231,76,60,0.3);  color: #fca5a5; border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+
+        /* Modal */
+        .modal-content { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; color: var(--text); }
+        .modal-header { border-bottom: 1px solid var(--border); padding: 14px 18px; }
+        .modal-footer { border-top: 1px solid var(--border); }
+        .modal-title { font-weight: 700; font-size: 15px; }
+        .btn-close { filter: invert(1); }
+
+        /* Confronto */
+        .vs-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+        .vs-num { font-size: 42px; font-weight: 800; line-height: 1; }
+        .vs-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .vs-sep { font-size: 22px; color: var(--muted); font-weight: 300; align-self: center; }
+
+        /* Tabs */
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+
+        /* Input file customizado */
+        .btn-upload { background: var(--surface2); border: 1px dashed var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .btn-upload:hover { border-color: var(--verde); color: var(--verde); }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="brand">
+        <div class="logo">🎾</div>
+        <div>
+            <h5>Classic Court</h5>
+            <span>CLASSIC BOULEVARD</span>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        <nav>
+            <ul class="nav nav-pills" id="mainNav">
+                <li class="nav-item"><a class="nav-link active" href="#" data-tab="dashboard"><i class="bi bi-grid me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="partidas"><i class="bi bi-trophy me-1"></i>Partidas</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="jogadores"><i class="bi bi-people me-1"></i>Jogadores</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="ranking"><i class="bi bi-bar-chart me-1"></i>Ranking</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="confronto"><i class="bi bi-slash-circle me-1"></i>Confronto</a></li>
+            </ul>
+        </nav>
+        <div class="d-flex align-items-center gap-2" style="border-left:1px solid var(--border);padding-left:16px">
+            <span id="user-nome" style="font-size:13px;color:var(--muted)"></span>
+            <button onclick="sair()" style="background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer" title="Sair"><i class="bi bi-box-arrow-right"></i></button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-4 px-3 px-md-4">
+    <div id="alerta" style="display:none" class="mb-3"></div>
+
+    <!-- DASHBOARD -->
+    <div class="tab-pane active" id="tab-dashboard">
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card-stat d-flex align-items-center justify-content-between">
+                    <div><div class="num" id="stat-jogadores">-</div><div class="label">Jogadores</div></div>
+                    <div class="icon"><i class="bi bi-people"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-stat d-flex align-items-center justify-content-between">
+                    <div><div class="num" id="stat-partidas">-</div><div class="label">Partidas</div></div>
+                    <div class="icon"><i class="bi bi-trophy"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-stat d-flex align-items-center justify-content-between">
+                    <div><div class="num" id="stat-simples">-</div><div class="label">Simples</div></div>
+                    <div class="icon"><i class="bi bi-person"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-stat d-flex align-items-center justify-content-between">
+                    <div><div class="num" id="stat-duplas">-</div><div class="label">Duplas</div></div>
+                    <div class="icon"><i class="bi bi-people-fill"></i></div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-7">
+                <div class="section-card">
+                    <div class="section-top">
+                        <div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-clock-history"></i></div><h6>Ultimas Partidas</h6></div>
+                        <button class="btn-verde-sm" onclick="irTab('partidas')"><i class="bi bi-plus me-1"></i>Nova</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="dark-table">
+                            <thead><tr><th>Data</th><th>Partida</th><th>Placar</th><th>Vencedor</th></tr></thead>
+                            <tbody id="tb-ultimas"><tr><td colspan="4" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="section-card">
+                    <div class="section-top">
+                        <div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-trophy"></i></div><h6>Top Jogadores</h6></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="dark-table">
+                            <thead><tr><th>#</th><th>Jogador</th><th>V</th><th>D</th><th>%</th></tr></thead>
+                            <tbody id="tb-top"><tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PARTIDAS -->
+    <div class="tab-pane" id="tab-partidas">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-top">
+                        <div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-plus-circle"></i></div><h6>Registrar Partida</h6></div>
+                    </div>
+                    <div class="p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Data da Partida</label>
+                            <input type="date" class="form-control" id="data-partida">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" id="tipo" onchange="toggleTipo()">
+                                <option value="simples">Simples (1x1)</option>
+                                <option value="duplas">Duplas (2x2)</option>
+                            </select>
+                        </div>
+                        <div id="campos-simples">
+                            <div class="row g-2 mb-3">
+                                <div class="col-6"><label class="form-label">Jogador 1</label><select class="form-select" id="s-j1"></select></div>
+                                <div class="col-6"><label class="form-label">Jogador 2</label><select class="form-select" id="s-j2"></select></div>
+                            </div>
+                        </div>
+                        <div id="campos-duplas" style="display:none">
+                            <div class="mb-2">
+                                <label class="form-label">Dupla 1</label>
+                                <div class="row g-2">
+                                    <div class="col-6"><select class="form-select" id="d-j1"></select></div>
+                                    <div class="col-6"><select class="form-select" id="d-j2"></select></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Dupla 2</label>
+                                <div class="row g-2">
+                                    <div class="col-6"><select class="form-select" id="d-j3"></select></div>
+                                    <div class="col-6"><select class="form-select" id="d-j4"></select></div>
+                                </div>
+                            </div>
+                        </div>
+                        <label class="form-label">Sets</label>
+                        <div>
+                            <div class="set-row"><span class="set-label">Set 1</span><input type="number" class="form-control" id="s1l1" min="0" max="7" placeholder="0"><span class="sep">x</span><input type="number" class="form-control" id="s1l2" min="0" max="7" placeholder="0"></div>
+                            <div class="set-row"><span class="set-label">Set 2</span><input type="number" class="form-control" id="s2l1" min="0" max="7" placeholder="0"><span class="sep">x</span><input type="number" class="form-control" id="s2l2" min="0" max="7" placeholder="0"></div>
+                            <div class="set-row"><span class="set-label">Set 3</span><input type="number" class="form-control" id="s3l1" min="0" max="7" placeholder="0"><span class="sep">x</span><input type="number" class="form-control" id="s3l2" min="0" max="7" placeholder="0"></div>
+                        </div>
+                        <div class="mt-1 mb-3" style="font-size:11px;color:var(--muted)">Deixe em branco os sets não jogados</div>
+                        <button class="btn-verde w-100" onclick="registrarPartida()" id="btn-registrar"><i class="bi bi-trophy me-1"></i> Registrar Partida</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="section-card">
+                    <div class="section-top">
+                        <div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-list-ul"></i></div><h6>Historico <span id="hist-total" style="color:var(--muted);font-weight:400;font-size:11px"></span></h6></div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <select class="form-select form-select-sm" id="filtro-jogador" onchange="carregarHistorico()" style="width:160px;font-size:12px">
+                                <option value="">Todos os jogadores</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="dark-table">
+                            <thead><tr><th>Data</th><th>Partida</th><th>Placar</th><th>Vencedor</th><th></th></tr></thead>
+                            <tbody id="tb-historico"><tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JOGADORES -->
+    <div class="tab-pane" id="tab-jogadores">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-person-plus"></i></div><h6>Novo Jogador</h6></div></div>
+                    <div class="p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="txtJogador" placeholder="Nome do jogador..." maxlength="100">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Foto</label>
+                            <div class="foto-wrap">
+                                <img id="foto-preview" class="foto-preview" src="">
+                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Escolher foto<input type="file" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)"></label>
+                            </div>
+                        </div>
+                        <button class="btn-verde w-100" onclick="salvarJogador()" id="btn-jogador"><i class="bi bi-floppy me-1"></i> Salvar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="section-card">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-people"></i></div><h6>Jogadores Cadastrados</h6></div></div>
+                    <div class="table-responsive">
+                        <table class="dark-table">
+                            <thead><tr><th>Jogador</th><th>Cadastrado em</th><th>V</th><th>D</th><th></th></tr></thead>
+                            <tbody id="tb-jogadores"><tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RANKING -->
+    <div class="tab-pane" id="tab-ranking">
+        <div class="row g-3">
+            <div class="col-md-9 mx-auto">
+                <div class="section-card">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-bar-chart"></i></div><h6>Ranking Geral — Classic Boulevard</h6></div></div>
+                    <div class="table-responsive">
+                        <table class="dark-table">
+                            <thead><tr><th>#</th><th>Jogador</th><th>Partidas</th><th>Vitorias</th><th>Derrotas</th><th>Sets V</th><th>Sets D</th><th>Aproveit.</th></tr></thead>
+                            <tbody id="tb-ranking"><tr><td colspan="8" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFRONTO -->
+    <div class="tab-pane" id="tab-confronto">
+        <div class="row g-3">
+            <div class="col-md-8 mx-auto">
+                <div class="section-card mb-3">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-slash-circle"></i></div><h6>Confronto Direto</h6></div></div>
+                    <div class="p-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-5"><label class="form-label">Jogador A</label><select class="form-select" id="conf-j1"></select></div>
+                            <div class="col-2 text-center pb-1" style="font-size:18px;color:var(--muted);font-weight:700">VS</div>
+                            <div class="col-5"><label class="form-label">Jogador B</label><select class="form-select" id="conf-j2"></select></div>
+                        </div>
+                        <button class="btn-verde w-100 mt-3" onclick="carregarConfronto()"><i class="bi bi-search me-1"></i> Ver Confronto</button>
+                    </div>
+                </div>
+
+                <div id="resultado-confronto" style="display:none">
+                    <!-- Placar geral -->
+                    <div class="section-card mb-3">
+                        <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-trophy"></i></div><h6 id="conf-titulo">Confronto</h6></div></div>
+                        <div class="p-4">
+                            <div class="row g-3 align-items-center text-center mb-4">
+                                <div class="col-5">
+                                    <div class="avatar-lg" id="conf-avatar-a"></div>
+                                    <div style="font-weight:700;font-size:15px" id="conf-nome-a"></div>
+                                </div>
+                                <div class="col-2">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <div>
+                                            <div class="vs-num" id="conf-vit-a" style="color:var(--verde)">0</div>
+                                            <div class="vs-label">vitórias</div>
+                                        </div>
+                                        <div class="vs-sep">x</div>
+                                        <div>
+                                            <div class="vs-num" id="conf-vit-b" style="color:#e74c3c">0</div>
+                                            <div class="vs-label">vitórias</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-5">
+                                    <div class="avatar-lg" id="conf-avatar-b"></div>
+                                    <div style="font-weight:700;font-size:15px" id="conf-nome-b"></div>
+                                </div>
+                            </div>
+                            <div class="row g-2 text-center">
+                                <div class="col-4">
+                                    <div class="vs-card">
+                                        <div style="font-size:22px;font-weight:800;color:var(--verde)" id="conf-total">0</div>
+                                        <div style="font-size:11px;color:var(--muted)">Partidas</div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="vs-card">
+                                        <div style="font-size:22px;font-weight:800;color:var(--verde)" id="conf-sets-a">0</div>
+                                        <div style="font-size:11px;color:var(--muted)">Sets <span id="conf-sn-a"></span></div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="vs-card">
+                                        <div style="font-size:22px;font-weight:800;color:#e74c3c" id="conf-sets-b">0</div>
+                                        <div style="font-size:11px;color:var(--muted)">Sets <span id="conf-sn-b"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Historico confronto -->
+                    <div class="section-card">
+                        <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-clock-history"></i></div><h6>Historico de Partidas</h6></div></div>
+                        <div class="table-responsive">
+                            <table class="dark-table">
+                                <thead><tr><th>Data</th><th>Placar</th><th>Vencedor</th></tr></thead>
+                                <tbody id="tb-confronto"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Editar Jogador -->
+<div class="modal fade" id="modalEditJogador" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Editar Jogador</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-3">
+                <input type="hidden" id="edit-jogador-id">
+                <div class="mb-3"><label class="form-label">Nome</label><input type="text" class="form-control" id="edit-jogador-nome" maxlength="100"></div>
+                <div>
+                    <label class="form-label">Foto</label>
+                    <div class="foto-wrap">
+                        <img id="edit-foto-preview" class="foto-preview" src="">
+                        <label class="btn-upload"><i class="bi bi-camera me-1"></i> Alterar foto<input type="file" id="edit-foto-input" accept="image/*" style="display:none" onchange="previewFotoEdit(this)"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-verde-sm" onclick="confirmarEditJogador()"><i class="bi bi-floppy me-1"></i>Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Delete Partida -->
+<div class="modal fade" id="modalDelPartida" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title text-danger"><i class="bi bi-trash me-2"></i>Excluir Partida</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-3" style="font-size:14px;color:var(--muted)">Deseja realmente excluir esta partida?<input type="hidden" id="del-partida-id"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="confirmarDelPartida()"><i class="bi bi-trash me-1"></i>Excluir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="config.js"></script>
+<script>
+
+let jogadores = [];
+const modalEditJogador = new bootstrap.Modal(document.getElementById('modalEditJogador'));
+const modalDelPartida  = new bootstrap.Modal(document.getElementById('modalDelPartida'));
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+// Verifica sessao
+const ccSession = JSON.parse(localStorage.getItem('cc_session') || 'null');
+if (!ccSession || !ccSession.access_token) {
+    window.location.href = 'login.html';
+}
+const usuarioNome = ccSession?.user?.user_metadata?.nome || ccSession?.user?.email || '';
+document.getElementById('user-nome').textContent = usuarioNome;
+
+function sair() {
+    localStorage.removeItem('cc_session');
+    window.location.href = 'login.html';
+}
+
+// Define data de hoje no campo
+document.getElementById('data-partida').value = new Date().toISOString().split('T')[0];
+
+// =============================================
+// Navegacao
+// =============================================
+document.querySelectorAll('[data-tab]').forEach(link => {
+    link.addEventListener('click', e => { e.preventDefault(); irTab(link.getAttribute('data-tab')); });
+});
+
+function irTab(tab) {
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'dashboard') carregarDashboard();
+    if (tab === 'partidas')  { carregarHistorico(); preencherSelects(); }
+    if (tab === 'jogadores') carregarJogadores();
+    if (tab === 'ranking')   carregarRanking();
+    if (tab === 'confronto') preencherSelectsConfronto();
+}
+
+// =============================================
+// Helpers
+// =============================================
+function alerta(tipo, msg) {
+    const el = document.getElementById('alerta');
+    el.className = tipo === 'ok' ? 'alert-ok mb-3' : 'alert-err mb-3';
+    el.innerHTML = `<i class="bi bi-${tipo==='ok'?'check-circle-fill':'exclamation-triangle-fill'} me-2"></i>${msg}`;
+    el.style.display = '';
+    setTimeout(() => el.style.display = 'none', 4000);
+}
+
+function fmtData(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR');
+}
+
+function iniciais(nome) {
+    if (!nome) return '?';
+    const p = nome.trim().split(' ');
+    return p.length > 1 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : p[0][0].toUpperCase();
+}
+
+function avatarHtml(nome, fotoUrl, size) {
+    const cls = size === 'lg' ? 'avatar-lg' : 'avatar me-2';
+    if (fotoUrl) return `<span class="${cls}"><img src="${fotoUrl}" alt="${nome}"></span>`;
+    return `<span class="${cls}">${iniciais(nome)}</span>`;
+}
+
+function rankClass(i) {
+    return ['gold','silver','bronze'][i] || '';
+}
+
+function jMap() {
+    const m = {};
+    jogadores.forEach(j => m[j.id] = j);
+    return m;
+}
+
+function nomePorId(id) {
+    const j = jogadores.find(x => x.id == id);
+    return j ? j.nome : '?';
+}
+
+function fotoPorId(id) {
+    const j = jogadores.find(x => x.id == id);
+    return j ? j.foto_url : null;
+}
+
+// =============================================
+// Storage — upload de foto
+// =============================================
+async function uploadFoto(file, nomeJogador) {
+    const ext  = file.name.split('.').pop();
+    const path = `${nomeJogador.replace(/\s+/g,'_')}_${Date.now()}.${ext}`;
+    const res  = await fetch(`${SUPA_URL}/storage/v1/object/avatars/${path}`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPA_KEY,
+            'Authorization': 'Bearer ' + SUPA_KEY,
+            'Content-Type': file.type,
+            'x-upsert': 'true'
+        },
+        body: file
+    });
+    if (!res.ok) throw new Error('Falha no upload da foto');
+    return `${SUPA_URL}/storage/v1/object/public/avatars/${path}`;
+}
+
+function previewFoto(input) {
+    const prev = document.getElementById('foto-preview');
+    if (input.files && input.files[0]) {
+        prev.src = URL.createObjectURL(input.files[0]);
+        prev.style.display = 'block';
+    }
+}
+
+function previewFotoEdit(input) {
+    const prev = document.getElementById('edit-foto-preview');
+    if (input.files && input.files[0]) {
+        prev.src = URL.createObjectURL(input.files[0]);
+        prev.style.display = 'block';
+    }
+}
+
+// =============================================
+// Jogadores
+// =============================================
+async function carregarJogadores() {
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,criado_em&order=nome.asc') || [];
+    const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
+
+    const stats = {};
+    jogadores.forEach(j => stats[j.id] = { v: 0, d: 0 });
+
+    partidas.forEach(p => {
+        const l1 = p.tipo === 'simples' ? [p.jogador1_id] : [p.dupla1_j1_id, p.dupla1_j2_id];
+        const l2 = p.tipo === 'simples' ? [p.jogador2_id] : [p.dupla2_j1_id, p.dupla2_j2_id];
+        l1.forEach(id => { if (id && stats[id]) p.vencedor==1 ? stats[id].v++ : stats[id].d++; });
+        l2.forEach(id => { if (id && stats[id]) p.vencedor==2 ? stats[id].v++ : stats[id].d++; });
+    });
+
+    const tb = document.getElementById('tb-jogadores');
+    if (!jogadores.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhum jogador cadastrado.</td></tr>'; return; }
+    tb.innerHTML = jogadores.map(j => `
+        <tr>
+            <td class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} ${j.nome}</td>
+            <td style="color:var(--muted);font-size:12px">${fmtData(j.criado_em)}</td>
+            <td><span class="badge-v">${stats[j.id]?.v||0}V</span></td>
+            <td><span class="badge-d">${stats[j.id]?.d||0}D</span></td>
+            <td>
+                <button class="btn-act edit" onclick="abrirEditJogador(${j.id},'${j.nome.replace(/'/g,"\\'")}','${j.foto_url||''}')"><i class="bi bi-pencil"></i></button>
+                <button class="btn-act del"  onclick="deletarJogador(${j.id})"><i class="bi bi-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function salvarJogador() {
+    const nome = document.getElementById('txtJogador').value.trim();
+    if (!nome) { alerta('erro', 'Informe o nome do jogador.'); return; }
+    const btn = document.getElementById('btn-jogador');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Salvando...';
+    try {
+        // Verifica nome duplicado
+        const existente = jogadores.find(j => j.nome.trim().toLowerCase() === nome.toLowerCase());
+        if (existente) { alerta('erro', `Ja existe um jogador chamado "${existente.nome}". Use o nome completo ou adicione o sobrenome.`); return; }
+
+        let foto_url = null;
+        const file = document.getElementById('foto-input').files[0];
+        if (file) foto_url = await uploadFoto(file, nome);
+        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, foto_url }) });
+        document.getElementById('txtJogador').value = '';
+        document.getElementById('foto-input').value = '';
+        document.getElementById('foto-preview').style.display = 'none';
+        alerta('ok', 'Jogador cadastrado!');
+        carregarJogadores();
+    } catch(e) { alerta('erro', 'Erro: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Salvar'; }
+}
+
+function abrirEditJogador(id, nome, fotoUrl) {
+    document.getElementById('edit-jogador-id').value   = id;
+    document.getElementById('edit-jogador-nome').value = nome;
+    const prev = document.getElementById('edit-foto-preview');
+    if (fotoUrl) { prev.src = fotoUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+    modalEditJogador.show();
+}
+
+async function confirmarEditJogador() {
+    const id   = document.getElementById('edit-jogador-id').value;
+    const nome = document.getElementById('edit-jogador-nome').value.trim();
+    if (!nome) { alerta('erro', 'Informe o nome.'); return; }
+    let dados = { nome };
+    const file = document.getElementById('edit-foto-input').files[0];
+    if (file) dados.foto_url = await uploadFoto(file, nome);
+    await supaFetch(`jogadores?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify(dados) });
+    modalEditJogador.hide();
+    alerta('ok', 'Jogador atualizado!');
+    carregarJogadores();
+}
+
+async function deletarJogador(id) {
+    if (!confirm('Excluir este jogador?')) return;
+    await supaFetch(`jogadores?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    alerta('ok', 'Jogador removido.');
+    carregarJogadores();
+}
+
+function preencherSelects() {
+    ['s-j1','s-j2','d-j1','d-j2','d-j3','d-j4'].forEach(id => {
+        document.getElementById(id).innerHTML = '<option value="">-- Selecione --</option>' +
+            jogadores.map(j => `<option value="${j.id}">${j.nome}</option>`).join('');
+    });
+    const filtro = document.getElementById('filtro-jogador');
+    const val = filtro.value;
+    filtro.innerHTML = '<option value="">Todos os jogadores</option>' +
+        jogadores.map(j => `<option value="${j.id}" ${j.id==val?'selected':''}>${j.nome}</option>`).join('');
+}
+
+// =============================================
+// Partidas
+// =============================================
+function toggleTipo() {
+    const tipo = document.getElementById('tipo').value;
+    document.getElementById('campos-simples').style.display = tipo==='simples' ? '' : 'none';
+    document.getElementById('campos-duplas').style.display  = tipo==='duplas'  ? '' : 'none';
+}
+
+async function registrarPartida() {
+    const tipo = document.getElementById('tipo').value;
+    const dataVal = document.getElementById('data-partida').value;
+    const sets = [];
+
+    for (let i = 1; i <= 3; i++) {
+        const l1 = document.getElementById(`s${i}l1`).value;
+        const l2 = document.getElementById(`s${i}l2`).value;
+        if (l1 !== '' && l2 !== '') sets.push({ numero_set: i, games_lado1: parseInt(l1), games_lado2: parseInt(l2) });
+    }
+    if (!sets.length) { alerta('erro', 'Informe pelo menos 1 set.'); return; }
+
+    const setsV1 = sets.filter(s => s.games_lado1 > s.games_lado2).length;
+    const setsV2 = sets.filter(s => s.games_lado2 > s.games_lado1).length;
+    const vencedor = setsV1 >= setsV2 ? 1 : 2;
+
+    let partida = { tipo, vencedor, data_partida: dataVal || new Date().toISOString() };
+
+    // Jogador do usuario logado
+    const meuJogador = jogadores.find(j => j.user_id === getUserId());
+    if (!meuJogador) { alerta('erro', 'Seu perfil de jogador nao foi encontrado. Verifique seu cadastro.'); return; }
+
+    if (tipo === 'simples') {
+        const j1 = document.getElementById('s-j1').value;
+        const j2 = document.getElementById('s-j2').value;
+        if (!j1 || !j2)  { alerta('erro', 'Selecione os dois jogadores.'); return; }
+        if (j1 === j2)   { alerta('erro', 'Selecione jogadores diferentes.'); return; }
+        if (j1 != meuJogador.id && j2 != meuJogador.id) { alerta('erro', 'Voce precisa ser um dos jogadores da partida.'); return; }
+        partida.jogador1_id = parseInt(j1);
+        partida.jogador2_id = parseInt(j2);
+    } else {
+        const ids = ['d-j1','d-j2','d-j3','d-j4'].map(i => document.getElementById(i).value);
+        if (ids.some(v => !v)) { alerta('erro', 'Selecione todos os jogadores das duplas.'); return; }
+        if (!ids.includes(String(meuJogador.id))) { alerta('erro', 'Voce precisa ser um dos jogadores da partida.'); return; }
+        partida.dupla1_j1_id = parseInt(ids[0]); partida.dupla1_j2_id = parseInt(ids[1]);
+        partida.dupla2_j1_id = parseInt(ids[2]); partida.dupla2_j2_id = parseInt(ids[3]);
+    }
+
+    const btn = document.getElementById('btn-registrar');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando...';
+    try {
+        const res = await supaFetch('partidas', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(partida) });
+        const partidaId = res[0].id;
+        for (const s of sets) await supaFetch('sets', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ ...s, partida_id: partidaId }) });
+        ['s1l1','s1l2','s2l1','s2l2','s3l1','s3l2'].forEach(id => document.getElementById(id).value = '');
+        alerta('ok', `Partida registrada! Vencedor: Lado ${vencedor}`);
+        carregarHistorico();
+    } catch(e) { alerta('erro', 'Erro: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trophy me-1"></i> Registrar Partida'; }
+}
+
+async function carregarHistorico() {
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    preencherSelects();
+
+    const filtroId = document.getElementById('filtro-jogador').value;
+    let query = 'partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor&order=data_partida.desc&limit=100';
+
+    if (filtroId) {
+        query += `&or=(jogador1_id.eq.${filtroId},jogador2_id.eq.${filtroId},dupla1_j1_id.eq.${filtroId},dupla1_j2_id.eq.${filtroId},dupla2_j1_id.eq.${filtroId},dupla2_j2_id.eq.${filtroId})`;
+    }
+
+    const partidas = await supaFetch(query) || [];
+    const sets     = await supaFetch('sets?select=partida_id,numero_set,games_lado1,games_lado2&order=numero_set.asc') || [];
+
+    document.getElementById('hist-total').textContent = `(${partidas.length} partidas)`;
+    const tb = document.getElementById('tb-historico');
+    if (!partidas.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma partida encontrada.</td></tr>'; return; }
+
+    tb.innerHTML = partidas.map(p => {
+        const pSets = sets.filter(s => s.partida_id === p.id);
+        const placar = pSets.map(s => `${s.games_lado1}x${s.games_lado2}`).join(' ');
+        let lado1, lado2, venc;
+        if (p.tipo === 'simples') {
+            lado1 = nomePorId(p.jogador1_id); lado2 = nomePorId(p.jogador2_id);
+        } else {
+            lado1 = `${nomePorId(p.dupla1_j1_id)} / ${nomePorId(p.dupla1_j2_id)}`;
+            lado2 = `${nomePorId(p.dupla2_j1_id)} / ${nomePorId(p.dupla2_j2_id)}`;
+        }
+        venc = p.vencedor == 1 ? lado1 : lado2;
+        return `<tr>
+            <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
+            <td style="font-size:12px">${lado1} x ${lado2}</td>
+            <td style="font-size:12px;color:var(--verde)">${placar}</td>
+            <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
+            <td><button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button></td>
+        </tr>`;
+    }).join('');
+}
+
+function abrirDelPartida(id) { document.getElementById('del-partida-id').value = id; modalDelPartida.show(); }
+
+async function confirmarDelPartida() {
+    const id = document.getElementById('del-partida-id').value;
+    await supaFetch(`sets?partida_id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    await supaFetch(`partidas?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+    modalDelPartida.hide(); alerta('ok', 'Partida excluída.'); carregarHistorico();
+}
+
+// =============================================
+// Ranking
+// =============================================
+async function carregarRanking() {
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
+    const sets     = await supaFetch('sets?select=partida_id,games_lado1,games_lado2') || [];
+
+    const stats = {};
+    jogadores.forEach(j => stats[j.id] = { nome: j.nome, foto: j.foto_url, p: 0, v: 0, d: 0, sv: 0, sd: 0 });
+
+    partidas.forEach(p => {
+        const pSets = sets.filter(s => s.partida_id === p.id);
+        const sv1 = pSets.reduce((a,s) => a+s.games_lado1, 0);
+        const sv2 = pSets.reduce((a,s) => a+s.games_lado2, 0);
+        const l1 = p.tipo==='simples' ? [p.jogador1_id] : [p.dupla1_j1_id, p.dupla1_j2_id];
+        const l2 = p.tipo==='simples' ? [p.jogador2_id] : [p.dupla2_j1_id, p.dupla2_j2_id];
+        l1.forEach(id => { if (id&&stats[id]) { stats[id].p++; p.vencedor==1?stats[id].v++:stats[id].d++; stats[id].sv+=sv1; stats[id].sd+=sv2; }});
+        l2.forEach(id => { if (id&&stats[id]) { stats[id].p++; p.vencedor==2?stats[id].v++:stats[id].d++; stats[id].sv+=sv2; stats[id].sd+=sv1; }});
+    });
+
+    const ranking = Object.entries(stats).map(([id,s]) => ({ ...s, id, pct: s.p>0?Math.round(s.v/s.p*100):0 })).sort((a,b) => b.pct-a.pct||b.v-a.v);
+    const tb = document.getElementById('tb-ranking');
+    if (!ranking.length) { tb.innerHTML = '<tr><td colspan="8" class="text-center py-3" style="color:var(--muted)">Sem dados ainda.</td></tr>'; return; }
+    tb.innerHTML = ranking.map((r,i) => `
+        <tr>
+            <td><span class="rank-num ${rankClass(i)}">${i+1}</span></td>
+            <td class="d-flex align-items-center gap-2">${avatarHtml(r.nome, r.foto)} ${r.nome}</td>
+            <td style="color:var(--muted)">${r.p}</td>
+            <td><span class="badge-v">${r.v}</span></td>
+            <td><span class="badge-d">${r.d}</span></td>
+            <td style="color:var(--verde)">${r.sv}</td>
+            <td style="color:var(--muted)">${r.sd}</td>
+            <td><strong style="color:${r.pct>=50?'var(--verde)':'#e74c3c'}">${r.pct}%</strong></td>
+        </tr>
+    `).join('');
+}
+
+// =============================================
+// Confronto
+// =============================================
+function preencherSelectsConfronto() {
+    ['conf-j1','conf-j2'].forEach(id => {
+        document.getElementById(id).innerHTML = '<option value="">-- Selecione --</option>' +
+            jogadores.map(j => `<option value="${j.id}">${j.nome}</option>`).join('');
+    });
+}
+
+async function carregarConfronto() {
+    const idA = document.getElementById('conf-j1').value;
+    const idB = document.getElementById('conf-j2').value;
+    if (!idA || !idB)    { alerta('erro', 'Selecione os dois jogadores.'); return; }
+    if (idA === idB)     { alerta('erro', 'Selecione jogadores diferentes.'); return; }
+
+    const jA = jogadores.find(j => j.id == idA);
+    const jB = jogadores.find(j => j.id == idB);
+
+    // Busca partidas simples entre os dois
+    const partidas = await supaFetch(
+        `partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,vencedor&tipo=eq.simples&order=data_partida.desc`
+    ) || [];
+
+    const confrontos = partidas.filter(p =>
+        (p.jogador1_id == idA && p.jogador2_id == idB) ||
+        (p.jogador1_id == idB && p.jogador2_id == idA)
+    );
+
+    const sets = await supaFetch('sets?select=partida_id,numero_set,games_lado1,games_lado2&order=numero_set.asc') || [];
+
+    let vitA = 0, vitB = 0, setsA = 0, setsB = 0;
+    confrontos.forEach(p => {
+        const pSets = sets.filter(s => s.partida_id === p.id);
+        const eJ1A  = p.jogador1_id == idA;
+        if ((p.vencedor == 1 && eJ1A) || (p.vencedor == 2 && !eJ1A)) vitA++;
+        else vitB++;
+        pSets.forEach(s => {
+            if (eJ1A) { setsA += s.games_lado1; setsB += s.games_lado2; }
+            else      { setsA += s.games_lado2; setsB += s.games_lado1; }
+        });
+    });
+
+    // Preenche UI
+    document.getElementById('conf-titulo').textContent = `${jA.nome} vs ${jB.nome}`;
+    document.getElementById('conf-nome-a').textContent = jA.nome;
+    document.getElementById('conf-nome-b').textContent = jB.nome;
+    document.getElementById('conf-sn-a').textContent   = jA.nome;
+    document.getElementById('conf-sn-b').textContent   = jB.nome;
+
+    const avA = document.getElementById('conf-avatar-a');
+    const avB = document.getElementById('conf-avatar-b');
+    avA.innerHTML = jA.foto_url ? `<img src="${jA.foto_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : iniciais(jA.nome);
+    avB.innerHTML = jB.foto_url ? `<img src="${jB.foto_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : iniciais(jB.nome);
+
+    document.getElementById('conf-vit-a').textContent  = vitA;
+    document.getElementById('conf-vit-b').textContent  = vitB;
+    document.getElementById('conf-total').textContent  = confrontos.length;
+    document.getElementById('conf-sets-a').textContent = setsA;
+    document.getElementById('conf-sets-b').textContent = setsB;
+
+    const tb = document.getElementById('tb-confronto');
+    if (!confrontos.length) {
+        tb.innerHTML = '<tr><td colspan="3" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma partida entre estes jogadores.</td></tr>';
+    } else {
+        tb.innerHTML = confrontos.map(p => {
+            const pSets = sets.filter(s => s.partida_id === p.id);
+            const placar = pSets.map(s => p.jogador1_id==idA ? `${s.games_lado1}x${s.games_lado2}` : `${s.games_lado2}x${s.games_lado1}`).join(' ');
+            const eJ1A   = p.jogador1_id == idA;
+            const venceu = (p.vencedor==1&&eJ1A)||(p.vencedor==2&&!eJ1A);
+            return `<tr>
+                <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
+                <td style="color:var(--verde);font-size:13px">${placar}</td>
+                <td><span class="${venceu?'badge-v':'badge-d'}">${venceu?jA.nome:jB.nome}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
+    document.getElementById('resultado-confronto').style.display = '';
+}
+
+// =============================================
+// Dashboard
+// =============================================
+async function carregarDashboard() {
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    const partidas     = await supaFetch('partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor&order=data_partida.desc') || [];
+    const sets         = await supaFetch('sets?select=partida_id,numero_set,games_lado1,games_lado2&order=numero_set.asc') || [];
+
+    document.getElementById('stat-jogadores').textContent = jogadores.length;
+    document.getElementById('stat-partidas').textContent  = partidas.length;
+    document.getElementById('stat-simples').textContent   = partidas.filter(p=>p.tipo==='simples').length;
+    document.getElementById('stat-duplas').textContent    = partidas.filter(p=>p.tipo==='duplas').length;
+
+    // Ultimas 5
+    const ultimas = partidas.slice(0,5);
+    const tb = document.getElementById('tb-ultimas');
+    if (!ultimas.length) { tb.innerHTML = '<tr><td colspan="4" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma partida ainda.</td></tr>'; }
+    else tb.innerHTML = ultimas.map(p => {
+        const pSets = sets.filter(s => s.partida_id===p.id);
+        const placar = pSets.map(s=>`${s.games_lado1}x${s.games_lado2}`).join(' ');
+        let lado1, lado2, venc;
+        if (p.tipo==='simples') { lado1=nomePorId(p.jogador1_id); lado2=nomePorId(p.jogador2_id); }
+        else { lado1=`${nomePorId(p.dupla1_j1_id)}/${nomePorId(p.dupla1_j2_id)}`; lado2=`${nomePorId(p.dupla2_j1_id)}/${nomePorId(p.dupla2_j2_id)}`; }
+        venc = p.vencedor==1 ? lado1 : lado2;
+        return `<tr>
+            <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
+            <td style="font-size:12px">${lado1} x ${lado2}</td>
+            <td style="font-size:12px;color:var(--verde)">${placar}</td>
+            <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
+        </tr>`;
+    }).join('');
+
+    // Top jogadores
+    const stats = {};
+    jogadores.forEach(j => stats[j.id] = { nome: j.nome, foto: j.foto_url, v: 0, d: 0, p: 0 });
+    partidas.forEach(p => {
+        const l1 = p.tipo==='simples'?[p.jogador1_id]:[p.dupla1_j1_id,p.dupla1_j2_id];
+        const l2 = p.tipo==='simples'?[p.jogador2_id]:[p.dupla2_j1_id,p.dupla2_j2_id];
+        l1.forEach(id => { if(id&&stats[id]){stats[id].p++;p.vencedor==1?stats[id].v++:stats[id].d++;} });
+        l2.forEach(id => { if(id&&stats[id]){stats[id].p++;p.vencedor==2?stats[id].v++:stats[id].d++;} });
+    });
+    const top = Object.values(stats).sort((a,b)=>b.v-a.v||a.d-b.d).slice(0,5);
+    const tb2 = document.getElementById('tb-top');
+    if (!top.length||top.every(t=>t.p===0)) { tb2.innerHTML='<tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Sem dados.</td></tr>'; return; }
+    tb2.innerHTML = top.map((r,i) => `
+        <tr>
+            <td><span class="rank-num ${rankClass(i)}">${i+1}</span></td>
+            <td class="d-flex align-items-center gap-1">${avatarHtml(r.nome,r.foto)} <span style="font-size:13px">${r.nome}</span></td>
+            <td><span class="badge-v">${r.v}</span></td>
+            <td><span class="badge-d">${r.d}</span></td>
+            <td><strong style="color:${r.p>0&&r.v/r.p>=0.5?'var(--verde)':'#e74c3c'};font-size:13px">${r.p>0?Math.round(r.v/r.p*100):0}%</strong></td>
+        </tr>
+    `).join('');
+}
+
+// =============================================
+// Init
+// =============================================
+(async () => {
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,user_id&order=nome.asc') || [];
+    carregarDashboard();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="90" fill="#0a0f0d"/>
+  <rect width="512" height="512" rx="90" fill="#2ecc71" opacity="0.12"/>
+  <!-- Quadra de tenis simplificada -->
+  <rect x="80" y="140" width="352" height="232" rx="8" fill="none" stroke="#2ecc71" stroke-width="14"/>
+  <line x1="256" y1="140" x2="256" y2="372" stroke="#2ecc71" stroke-width="8"/>
+  <line x1="80" y1="256" x2="432" y2="256" stroke="#2ecc71" stroke-width="8"/>
+  <line x1="80" y1="198" x2="432" y2="198" stroke="#2ecc71" stroke-width="5" opacity="0.5"/>
+  <line x1="80" y1="314" x2="432" y2="314" stroke="#2ecc71" stroke-width="5" opacity="0.5"/>
+  <!-- Bola de tenis -->
+  <circle cx="256" cy="256" r="36" fill="#2ecc71"/>
+  <path d="M232 235 Q256 220 280 235" fill="none" stroke="#0a0f0d" stroke-width="5"/>
+  <path d="M232 277 Q256 292 280 277" fill="none" stroke="#0a0f0d" stroke-width="5"/>
+</svg>
