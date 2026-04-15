@@ -845,11 +845,16 @@ async function registrarPartida() {
 
         // Envia email (sem bloquear se falhar)
         if (emailsJogadores.length) {
+            const idsEnvolvidos = tipo === 'simples'
+                ? [partida.jogador1_id, partida.jogador2_id]
+                : [partida.dupla1_j1_id, partida.dupla1_j2_id, partida.dupla2_j1_id, partida.dupla2_j2_id];
             enviarEmailPartida({
                 nomes: `${nomesLado1} x ${nomesLado2}`,
                 placar: placarStr,
                 vencedor: vencedorNome,
-                emails: [...new Set(emailsJogadores)]
+                emails: [...new Set(emailsJogadores)],
+                jogador_ids: idsEnvolvidos,
+                tipo
             }).catch(() => {});
         }
 
@@ -859,8 +864,8 @@ async function registrarPartida() {
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trophy me-1"></i> Registrar Partida'; }
 }
 
-async function enviarEmailPartida({ nomes, placar, vencedor, emails }) {
-    const payload = JSON.stringify({ nomes, placar, vencedor, emails });
+async function enviarEmailPartida({ nomes, placar, vencedor, emails, jogador_ids, tipo }) {
+    const payload = JSON.stringify({ nomes, placar, vencedor, emails, jogador_ids, tipo });
     await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
