@@ -277,7 +277,8 @@ async function fazerCadastro() {
     }
 }
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+const isWebView = /wv|WebView/.test(navigator.userAgent) || (window.Android !== undefined);
+if ('serviceWorker' in navigator && !isWebView) navigator.serviceWorker.register('sw.js');
 
 async function recuperarSenha() {
     const email = document.getElementById('rec-email').value.trim();

@@ -534,7 +534,8 @@ let jogadores = [];
 const modalEditJogador = new bootstrap.Modal(document.getElementById('modalEditJogador'));
 const modalDelPartida  = new bootstrap.Modal(document.getElementById('modalDelPartida'));
 
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+const isWebView = /wv|WebView/.test(navigator.userAgent) || (window.Android !== undefined);
+if ('serviceWorker' in navigator && !isWebView) navigator.serviceWorker.register('sw.js');
 
 // Verifica sessao
 const ccSession = JSON.parse(localStorage.getItem('cc_session') || 'null');
