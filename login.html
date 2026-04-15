@@ -194,6 +194,9 @@
 <script src="config.js"></script>
 <script>
 
+// Log de abertura
+logApp('login', 'App aberto', { ua: navigator.userAgent, url: location.href });
+
 // Verifica se ja esta logado
 const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
 if (session && session.access_token) {

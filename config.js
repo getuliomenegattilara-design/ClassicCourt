@@ -30,6 +30,21 @@ async function supaFetch(path, options = {}) {
     return JSON.parse(text);
 }
 
+async function logApp(origem, mensagem, dados = {}) {
+    try {
+        await fetch(SUPA_URL + '/rest/v1/logs', {
+            method: 'POST',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + SUPA_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ origem, mensagem, dados })
+        });
+    } catch(e) {}
+}
+
 async function supaCount(path) {
     const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
         headers: {
