@@ -27,7 +27,9 @@ async function supaFetch(path, options = {}) {
     });
     const text = await res.text();
     if (!text) return null;
-    return JSON.parse(text);
+    const data = JSON.parse(text);
+    if (!res.ok) throw new Error(data.message || data.error || JSON.stringify(data));
+    return data;
 }
 
 async function logApp(origem, mensagem, dados = {}) {
