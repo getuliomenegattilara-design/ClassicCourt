@@ -167,6 +167,7 @@
 
     <!-- DASHBOARD -->
     <div class="tab-pane active" id="tab-dashboard">
+        <div id="alerta-sumidos" style="display:none" class="mb-3"></div>
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
                 <div class="card-stat d-flex align-items-center justify-content-between">
@@ -1210,12 +1211,60 @@ async function carregarDashboard() {
 }
 
 // =============================================
+// Alerta jogadores sumidos
+// =============================================
+async function verificarSumidos(diasRef = 7) {
+    const el = document.getElementById('alerta-sumidos');
+    if (!el || !jogadores.length) return;
+
+    const partidas = await supaFetch(
+        'partidas?select=jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,data_partida,tipo&order=data_partida.desc'
+    ) || [];
+
+    const hoje = new Date();
+    const limiteMs = diasRef * 24 * 60 * 60 * 1000;
+
+    // Última partida por jogador
+    const ultimaPartida = {};
+    partidas.forEach(p => {
+        const ids = p.tipo === 'simples'
+            ? [p.jogador1_id, p.jogador2_id]
+            : [p.dupla1_j1_id, p.dupla1_j2_id, p.dupla2_j1_id, p.dupla2_j2_id];
+        ids.forEach(id => {
+            if (!id) return;
+            const dt = new Date(p.data_partida);
+            if (!ultimaPartida[id] || dt > ultimaPartida[id]) ultimaPartida[id] = dt;
+        });
+    });
+
+    const sumidos = jogadores.filter(j => {
+        const ultima = ultimaPartida[j.id];
+        if (!ultima) return true; // nunca jogou
+        return (hoje - ultima) > limiteMs;
+    });
+
+    if (!sumidos.length) { el.style.display = 'none'; return; }
+
+    const nomes = sumidos.map(j => `<strong>${j.nome.split(' ')[0]}</strong>`).join(', ');
+    el.style.display = '';
+    el.innerHTML = `
+        <div style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:12px;padding:12px 16px;display:flex;align-items:flex-start;gap:12px">
+            <span style="font-size:22px">😴</span>
+            <div>
+                <div style="font-weight:700;font-size:13px;color:#ffc107;margin-bottom:2px">Olha quem não joga há mais de ${diasRef} dias:</div>
+                <div style="font-size:13px;color:var(--text)">${nomes} — convoca esse povo pro court!</div>
+            </div>
+        </div>`;
+}
+
+// =============================================
 // Init
 // =============================================
 (async () => {
     jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,caracteristicas&order=nome.asc') || [];
     carregarDashboard();
     renderCaract('caract-novo');
+    verificarSumidos();
 })();
 </script>
 </body>
