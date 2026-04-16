@@ -1646,9 +1646,23 @@ Jogador: ${nome || 'Sem nome'}
 ${caractLabels.length ? `Estilo de jogo: ${caractLabels.join(', ')}` : ''}
 Crie UM apelido curto (2-4 palavras), criativo e bem-humorado para este tenista. Pode ser em português ou misturar inglês. Retorne APENAS o apelido, sem explicação, sem aspas.`;
 
-    const txt = await geminiCall(prompt);
-    if (txt) document.getElementById(apelidoId).value = txt.trim();
-    if (btn) { btn.disabled = false; btn.textContent = '🎭 IA'; }
+    const campo = document.getElementById(apelidoId);
+    campo.placeholder = 'Gerando...';
+    try {
+        const txt = await geminiCall(prompt);
+        if (txt) {
+            campo.value = txt.trim();
+        } else {
+            campo.placeholder = 'IA sem resposta — escreva manualmente';
+            alerta('erro', 'A IA não respondeu. Verifique a conexão ou escreva o apelido manualmente.');
+        }
+    } catch(e) {
+        campo.placeholder = 'Erro — tente novamente';
+        alerta('erro', 'Erro ao chamar a IA: ' + e.message);
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = '🎭 IA'; }
+        setTimeout(() => { if (!campo.value) campo.placeholder = 'Ex: O Slice Master'; }, 4000);
+    }
 }
 
 // =============================================

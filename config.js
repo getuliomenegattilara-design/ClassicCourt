@@ -78,9 +78,14 @@ async function geminiCall(prompt) {
     try {
         const res = await fetch(SUPA_URL + '/functions/v1/gemini-proxy', {
             method: 'POST',
-            headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + getToken(),
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ prompt })
         });
+        if (!res.ok) return '';
         const d = await res.json();
         return d.text || '';
     } catch(e) { return ''; }
