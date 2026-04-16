@@ -1407,15 +1407,22 @@ async function carregarHistorico() {
     if (!partidas.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma partida encontrada.</td></tr>'; return; }
 
     const meuJogadorId = jogadores.find(j => j.user_id === getUserId())?.id;
+    const pNome = (id) => {
+        const n = (jogadores.find(x => x.id == id)?.nome || '?').trim().split(/\s+/);
+        return n.length > 1 ? `${n[0]} ${n[1][0]}.` : n[0];
+    };
     tb.innerHTML = partidas.map(p => {
         const pSets = sets.filter(s => s.partida_id === p.id);
         const placar = pSets.map(s => `${s.games_lado1}x${s.games_lado2}`).join(' ');
-        let lado1, lado2, venc;
+        let lado1, lado2, venc, lado1Full, lado2Full;
         if (p.tipo === 'simples') {
-            lado1 = nomePorId(p.jogador1_id); lado2 = nomePorId(p.jogador2_id);
+            lado1 = pNome(p.jogador1_id); lado2 = pNome(p.jogador2_id);
+            lado1Full = nomePorId(p.jogador1_id); lado2Full = nomePorId(p.jogador2_id);
         } else {
-            lado1 = `${nomePorId(p.dupla1_j1_id)} / ${nomePorId(p.dupla1_j2_id)}`;
-            lado2 = `${nomePorId(p.dupla2_j1_id)} / ${nomePorId(p.dupla2_j2_id)}`;
+            lado1 = `${pNome(p.dupla1_j1_id)}/${pNome(p.dupla1_j2_id)}`;
+            lado2 = `${pNome(p.dupla2_j1_id)}/${pNome(p.dupla2_j2_id)}`;
+            lado1Full = `${nomePorId(p.dupla1_j1_id)} / ${nomePorId(p.dupla1_j2_id)}`;
+            lado2Full = `${nomePorId(p.dupla2_j1_id)} / ${nomePorId(p.dupla2_j2_id)}`;
         }
         venc = p.vencedor == 1 ? lado1 : lado2;
         const idsPartida = [p.jogador1_id, p.jogador2_id, p.dupla1_j1_id, p.dupla1_j2_id, p.dupla2_j1_id, p.dupla2_j2_id];
@@ -1423,14 +1430,14 @@ async function carregarHistorico() {
         const fotoThumb = p.foto_url
             ? `<a href="${p.foto_url}" target="_blank"><img src="${p.foto_url}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;border:1px solid var(--border)"></a>`
             : '';
-        const txtWpp = encodeURIComponent(`🎾 *Classic Court*\n${lado1} x ${lado2}\nPlacar: ${placar}\nVencedor: *${venc}*\n\n_Classic Boulevard_`);
+        const txtWpp = encodeURIComponent(`🎾 *Classic Court*\n${lado1Full} x ${lado2Full}\nPlacar: ${placar}\nVencedor: *${p.vencedor == 1 ? lado1Full : lado2Full}*\n\n_Classic Boulevard_`);
         const btnWpp = `<a href="https://wa.me/?text=${txtWpp}" target="_blank" class="btn-act" style="color:#25D366" title="Compartilhar no WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
         return `<tr>
-            <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
-            <td style="font-size:12px">${lado1} x ${lado2}</td>
-            <td style="font-size:12px;color:var(--verde)">${placar}</td>
-            <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
-            <td class="d-flex align-items-center gap-1">${fotoThumb}${btnWpp}${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
+            <td style="color:var(--muted);font-size:12px;white-space:nowrap">${fmtData(p.data_partida)}</td>
+            <td style="font-size:12px" title="${lado1Full} x ${lado2Full}">${lado1} x ${lado2}</td>
+            <td style="font-size:12px;color:var(--verde);white-space:nowrap">${placar}</td>
+            <td><span class="badge-v" style="font-size:11px;white-space:nowrap">${venc}</span></td>
+            <td style="white-space:nowrap"><div class="d-flex align-items-center gap-1">${fotoThumb}${btnWpp}${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</div></td>
         </tr>`;
     }).join('');
 }
@@ -1893,13 +1900,17 @@ async function carregarDashboard() {
     // Ultimas 5
     const ultimas = partidas.slice(0,5);
     const tb = document.getElementById('tb-ultimas');
+    const pNome = (id) => {
+        const n = (jogadores.find(x => x.id == id)?.nome || '?').trim().split(/\s+/);
+        return n.length > 1 ? `${n[0]} ${n[1][0]}.` : n[0];
+    };
     if (!ultimas.length) { tb.innerHTML = '<tr><td colspan="4" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma partida ainda.</td></tr>'; }
     else tb.innerHTML = ultimas.map(p => {
         const pSets = sets.filter(s => s.partida_id===p.id);
         const placar = pSets.map(s=>`${s.games_lado1}x${s.games_lado2}`).join(' ');
         let lado1, lado2, venc;
-        if (p.tipo==='simples') { lado1=nomePorId(p.jogador1_id); lado2=nomePorId(p.jogador2_id); }
-        else { lado1=`${nomePorId(p.dupla1_j1_id)}/${nomePorId(p.dupla1_j2_id)}`; lado2=`${nomePorId(p.dupla2_j1_id)}/${nomePorId(p.dupla2_j2_id)}`; }
+        if (p.tipo==='simples') { lado1=pNome(p.jogador1_id); lado2=pNome(p.jogador2_id); }
+        else { lado1=`${pNome(p.dupla1_j1_id)}/${pNome(p.dupla1_j2_id)}`; lado2=`${pNome(p.dupla2_j1_id)}/${pNome(p.dupla2_j2_id)}`; }
         venc = p.vencedor==1 ? lado1 : lado2;
         return `<tr>
             <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
