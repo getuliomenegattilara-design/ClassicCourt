@@ -1609,6 +1609,8 @@ async function carregarDashboard() {
 async function verificarSumidos(diasRef = 7) {
     const el = document.getElementById('alerta-sumidos');
     if (!el || !jogadores.length) return;
+    const meuJogador = jogadores.find(j => j.user_id === getUserId());
+    if (meuJogador?.professor) { el.style.display = 'none'; return; }
 
     const partidas = await supaFetch(
         'partidas?select=jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,data_partida,tipo&order=data_partida.desc'
