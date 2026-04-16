@@ -909,7 +909,7 @@ function verificarAdmin() {
 async function carregarAdmin() {
     const desde = new Date(); desde.setDate(desde.getDate() - 30);
     const desdeStr = desde.toISOString();
-    const logs = await supaFetch(`logs?select=*&created_at=gte.${desdeStr}&order=created_at.desc&limit=1000`).catch(() => []) || [];
+    const logs = await supaFetch(`logs?select=*&criado_em=gte.${desdeStr}&order=criado_em.desc&limit=1000`).catch(() => []) || [];
 
     // Resumo
     const contagem = {};
@@ -938,14 +938,14 @@ async function carregarAdmin() {
     logs.forEach(l => {
         const email = l.dados?.user_email || '(anônimo)';
         const nome = l.dados?.user_nome || email;
-        if (!usuarios[email]) usuarios[email] = { nome, email, logins: 0, partidas: 0, aulas: 0, apelido: 0, previsao: 0, ultimo: l.created_at };
+        if (!usuarios[email]) usuarios[email] = { nome, email, logins: 0, partidas: 0, aulas: 0, apelido: 0, previsao: 0, ultimo: l.criado_em };
         const u = usuarios[email];
         if (l.origem === 'login') u.logins++;
         if (l.origem === 'partida') u.partidas++;
         if (l.origem === 'aula') u.aulas++;
         if (l.origem === 'apelido') u.apelido++;
         if (l.origem === 'previsao') u.previsao++;
-        if (new Date(l.created_at) > new Date(u.ultimo)) u.ultimo = l.created_at;
+        if (new Date(l.criado_em) > new Date(u.ultimo)) u.ultimo = l.criado_em;
     });
     const tbU = document.getElementById('tb-admin-users');
     const arrU = Object.values(usuarios).sort((a,b) => new Date(b.ultimo) - new Date(a.ultimo));
@@ -968,7 +968,7 @@ async function carregarAdmin() {
     if (!ultimos.length) { tbL.innerHTML = '<tr><td colspan="4" class="text-center py-3" style="color:var(--muted)">Sem eventos.</td></tr>'; }
     else tbL.innerHTML = ultimos.map(l => `
         <tr>
-            <td style="font-size:11px;color:var(--muted);white-space:nowrap">${fmtDataHora(l.created_at)}</td>
+            <td style="font-size:11px;color:var(--muted);white-space:nowrap">${fmtDataHora(l.criado_em)}</td>
             <td style="font-size:12px">${l.dados?.user_nome || l.dados?.user_email || '—'}</td>
             <td><span class="badge-caract">${l.origem}</span></td>
             <td style="font-size:12px">${l.mensagem}</td>
