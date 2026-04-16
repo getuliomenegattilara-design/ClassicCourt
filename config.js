@@ -75,16 +75,9 @@ async function logApp(origem, mensagem, dados = {}) {
 // Gemini AI (via Edge Function - chave no servidor)
 // =============================================
 async function geminiCall(prompt) {
-    const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
-    const token = session?.access_token;
-    if (!token) throw new Error('Sem sessão ativa para chamar a IA.');
     const res = await fetch(SUPA_URL + '/functions/v1/gemini-proxy', {
         method: 'POST',
-        headers: {
-            'apikey': SUPA_KEY,
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
     });
     const d = await res.json();
