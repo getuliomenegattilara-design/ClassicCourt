@@ -1219,14 +1219,26 @@ async function registrarPartida() {
         }).filter(Boolean).join(' | ');
 
         mostrarToast('Partida registrada! 🏆', 'A IA está analisando o resultado...', 15);
-        const promptToast = `Você é um comentarista de tênis do condomínio Classic Boulevard, bem humorado, sarcástico e sem filtro.
-Dados da partida:
+        const estilos = [
+            'como um narrador de novela dramática que exagera tudo',
+            'como um torcedor fanático que não acredita no placar',
+            'como um comentarista de futebol que confundiu o esporte',
+            'como um analista técnico que inventa termos impossíveis',
+            'comparando os jogadores com tenistas famosos de forma absurda',
+            'usando apenas gírias mineiras e expressões de BH',
+            'como se fosse um programa de fofoca de condomínio',
+            'como um poeta que tenta fazer rima mas não consegue',
+            'como um locutor de rodeio comentando tênis pela primeira vez',
+            'com muita ironia, fingindo que o perdedor jogou bem'
+        ];
+        const estilo = estilos[Math.floor(Math.random() * estilos.length)];
+        const promptToast = `Você é o comentarista oficial do Classic Court, o app de tênis do Classic Boulevard em BH. Comente esta partida ${estilo}.
 - Modalidade: ${tipo === 'simples' ? 'simples' : 'duplas'}
 - Placar: ${nomesLado1} ${placarStr} ${nomesLado2}
 - Vencedor: ${vencedorNome}
 - Perdedor: ${perdedorNome}
 ${caractInfo ? `- Estilo dos jogadores: ${caractInfo}` : ''}
-Escreva exatamente 2 frases em português brasileiro informal: a primeira zuando o perdedor pelo placar de forma criativa, a segunda exagerando o elogio ao vencedor. Use gírias, seja engraçado e específico. PROIBIDO: "parabéns", "ótima partida", frases genéricas. Retorne só o texto, sem aspas.`;
+Escreva 2-3 frases curtas em português brasileiro informal. Seja específico com os nomes e o placar. PROIBIDO: "parabéns", "ótima partida", frases genéricas, repetir a mesma estrutura sempre. Retorne só o texto, sem aspas.`;
 
         const fallbackComentario = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
         const emailsUnicos = [...new Set(emailsJogadores)];
