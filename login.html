@@ -308,7 +308,7 @@ async function fazerCadastro() {
         localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
 
         // Cria jogador usando o token diretamente (sem supaFetch para evitar checagem de sessão)
-        await fetch(`${SUPA_URL}/rest/v1/jogadores`, {
+        const jogRes = await fetch(`${SUPA_URL}/rest/v1/jogadores`, {
             method: 'POST',
             headers: {
                 'apikey': SUPA_KEY,
@@ -318,6 +318,10 @@ async function fazerCadastro() {
             },
             body: JSON.stringify({ nome, email, user_id: data.user.id })
         });
+        if (!jogRes.ok) {
+            const jogErr = await jogRes.json().catch(() => ({}));
+            throw new Error('Conta criada mas erro ao criar jogador: ' + (jogErr.message || jogErr.error || jogRes.status));
+        }
 
         // Mostra overlay com piada personalizada
         mostrarOverlayPiada(nome);
