@@ -503,7 +503,7 @@
     <!-- AULAS -->
     <div class="tab-pane" id="tab-aulas">
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-4" id="secao-registrar-aula" style="display:none">
                 <div class="section-card">
                     <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-journal-plus"></i></div><h6>Registrar Aula</h6></div></div>
                     <div class="p-3">
@@ -853,7 +853,7 @@ function previewFotoAula(input) {
 let professores = [];
 
 async function carregarProfessores() {
-    professores = await supaFetch('professores?select=id,nome&order=nome.asc') || [];
+    professores = await supaFetch('jogadores?select=id,nome&professor=eq.true&order=nome.asc') || [];
     ['aula-professor', 'filtro-aula-prof'].forEach(selId => {
         const sel = document.getElementById(selId);
         if (!sel) return;
@@ -904,7 +904,6 @@ async function registrarAula() {
 
         // Limpa form
         document.getElementById('aula-data').value = '';
-        document.getElementById('aula-professor').value = '';
         document.getElementById('aula-comentario').value = '';
         ['aula-a1','aula-a2','aula-a3','aula-a4'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('aula-foto-input').value = '';
@@ -945,8 +944,20 @@ Faça um comentário hilário de 2 frases em português brasileiro informal usan
 }
 
 async function carregarAulas() {
-    if (!professores.length) await carregarProfessores();
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,professor,caracteristicas,apelido&order=nome.asc') || [];
+    await carregarProfessores();
     await preencherAlunosSelects();
+
+    const meuJogador = jogadores.find(j => j.user_id === getUserId());
+    const secao = document.getElementById('secao-registrar-aula');
+    const selProf = document.getElementById('aula-professor');
+    secao.style.display = '';
+    if (meuJogador?.professor) {
+        selProf.value = meuJogador.id;
+        selProf.disabled = true;
+    } else {
+        selProf.disabled = false;
+    }
 
     const filtroProf = document.getElementById('filtro-aula-prof').value;
     let query = 'aulas?select=id,data_aula,professor_id,aluno1_id,aluno2_id,aluno3_id,aluno4_id,comentario,foto_url&order=data_aula.desc&limit=100';
