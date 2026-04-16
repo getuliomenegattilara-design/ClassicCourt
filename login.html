@@ -292,8 +292,9 @@ async function fazerCadastro() {
     const btn = document.getElementById('btn-cadastro');
     btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Criando conta...';
     try {
-        // Verifica nome duplicado antes de criar conta
-        const existentes = await supaFetch('jogadores?select=nome') || [];
+        // Verifica nome duplicado antes de criar conta (fetch direto, sem sessão)
+        const _r = await fetch(`${SUPA_URL}/rest/v1/jogadores?select=nome`, { headers: { 'apikey': SUPA_KEY } });
+        const existentes = _r.ok ? await _r.json() : [];
         const duplicado  = existentes.find(j => j.nome.trim().toLowerCase() === nome.toLowerCase());
         if (duplicado) { alerta('erro', `Ja existe um jogador chamado "${duplicado.nome}". Use seu nome completo ou adicione o sobrenome.`); return; }
 
