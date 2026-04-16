@@ -995,8 +995,12 @@ function alerta(tipo, msg) {
 
 function fmtData(iso) {
     if (!iso) return '';
-    const d = new Date(iso);
-    return d.toLocaleDateString('pt-BR');
+    // Se for só data (YYYY-MM-DD) parse como local para não sofrer shift UTC
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+        const [y, m, d] = iso.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString('pt-BR');
+    }
+    return new Date(iso).toLocaleDateString('pt-BR');
 }
 
 function iniciais(nome) {
