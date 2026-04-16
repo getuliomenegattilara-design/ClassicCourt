@@ -944,7 +944,8 @@ Faça um comentário hilário de 2 frases em português brasileiro informal usan
 }
 
 async function carregarAulas() {
-    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,professor,caracteristicas,apelido&order=nome.asc') || [];
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,professor,caracteristicas,apelido&order=nome.asc') || [];
+    professores = [];
     await carregarProfessores();
     await preencherAlunosSelects();
 
@@ -953,7 +954,7 @@ async function carregarAulas() {
     const selProf = document.getElementById('aula-professor');
     secao.style.display = '';
     if (meuJogador?.professor) {
-        selProf.value = meuJogador.id;
+        selProf.value = String(meuJogador.id);
         selProf.disabled = true;
     } else {
         selProf.disabled = false;
