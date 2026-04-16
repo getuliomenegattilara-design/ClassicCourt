@@ -1010,7 +1010,7 @@ function previewFotoEdit(input) {
 // Jogadores
 // =============================================
 async function carregarJogadores() {
-    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,criado_em,caracteristicas,apelido&order=nome.asc') || [];
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,professor,criado_em,caracteristicas,apelido&order=nome.asc') || [];
     const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
 
     const stats = {};
