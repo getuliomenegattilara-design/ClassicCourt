@@ -727,6 +727,20 @@ const CARACT = [
     {id:'ace',       emoji:'💨', label:'Especialista em dupla falta'},
 ];
 
+const CONQUISTAS = [
+    {id:'primeira_v',  emoji:'🏆', titulo:'Primeira Vitória',   desc:'Venceu sua primeira partida'},
+    {id:'hat_trick',   emoji:'🔥', titulo:'Hat-trick',           desc:'3 vitórias seguidas'},
+    {id:'invicto_5',   emoji:'⚡', titulo:'Invicto',             desc:'5 vitórias seguidas'},
+    {id:'veterano_10', emoji:'👴', titulo:'Veterano',            desc:'10 partidas jogadas'},
+    {id:'lenda_25',    emoji:'🎖️', titulo:'Lenda',               desc:'25 partidas jogadas'},
+    {id:'estudioso_5', emoji:'📅', titulo:'Estudioso',           desc:'5 aulas frequentadas'},
+    {id:'academico_20',emoji:'📚', titulo:'Acadêmico',           desc:'20 aulas frequentadas'},
+    {id:'pneu',        emoji:'🎯', titulo:'Pneu!',               desc:'Venceu um set 6x0'},
+    {id:'viradao',     emoji:'💪', titulo:'Viradão',             desc:'Venceu após perder o 1º set'},
+    {id:'rei_simp_10', emoji:'🥇', titulo:'Rei dos Simples',     desc:'10 vitórias em simples'},
+    {id:'rei_dup_10',  emoji:'🤝', titulo:'Rei das Duplas',      desc:'10 vitórias em duplas'},
+];
+
 function renderCaract(containerId, selecionadas = []) {
     document.getElementById(containerId).innerHTML = CARACT.map(c => {
         const ativo = selecionadas.includes(c.id);
@@ -739,6 +753,77 @@ function toggleCaract(span) {
     const ativo = span.classList.toggle('ativo');
     span.style.background = ativo ? 'rgba(196,120,80,0.3)' : 'rgba(196,120,80,0.12)';
     span.style.borderColor = ativo ? 'var(--verde)' : 'rgba(196,120,80,0.3)';
+}
+
+function notificarConquistas(ids) {
+    const labels = ids.map(id => {
+        const c = CONQUISTAS.find(x => x.id === id);
+        return c ? `${c.emoji} ${c.titulo}` : '';
+    }).filter(Boolean).join(' • ');
+    if (labels) alerta('ok', `🎉 Nova conquista: ${labels}`);
+}
+
+async function verificarConquistas(jogadorId) {
+    if (!jogadorId) return [];
+    try {
+        const [partidas, sets, aulas, atuais] = await Promise.all([
+            supaFetch(`partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor,data_partida&or=(jogador1_id.eq.${jogadorId},jogador2_id.eq.${jogadorId},dupla1_j1_id.eq.${jogadorId},dupla1_j2_id.eq.${jogadorId},dupla2_j1_id.eq.${jogadorId},dupla2_j2_id.eq.${jogadorId})&order=data_partida.asc`).catch(() => []),
+            supaFetch('sets?select=partida_id,numero_set,games_lado1,games_lado2').catch(() => []),
+            supaFetch(`aulas?select=id&or=(aluno1_id.eq.${jogadorId},aluno2_id.eq.${jogadorId},aluno3_id.eq.${jogadorId},aluno4_id.eq.${jogadorId})`).catch(() => []),
+            supaFetch(`conquistas_jogador?select=conquista_id&jogador_id=eq.${jogadorId}`).catch(() => [])
+        ]);
+        const jaTem = new Set((atuais||[]).map(c => c.conquista_id));
+        const parts = partidas || [];
+        const totalPart = parts.length;
+        const totalAulas = (aulas||[]).length;
+
+        let vSimp = 0, vDup = 0, temPneu = false, temViradao = false;
+        const resultados = []; // 1=venceu, 0=perdeu
+        parts.forEach(p => {
+            const l1 = p.tipo==='simples' ? [p.jogador1_id] : [p.dupla1_j1_id, p.dupla1_j2_id];
+            const meuLado = l1.map(x=>x).includes(jogadorId) ? 1 : 2;
+            const venci = p.vencedor == meuLado;
+            resultados.push(venci ? 1 : 0);
+            if (venci) { p.tipo==='simples' ? vSimp++ : vDup++; }
+            const pSets = (sets||[]).filter(s => s.partida_id === p.id).sort((a,b) => a.numero_set - b.numero_set);
+            pSets.forEach(s => {
+                if (meuLado === 1 && s.games_lado1 === 6 && s.games_lado2 === 0) temPneu = true;
+                if (meuLado === 2 && s.games_lado2 === 6 && s.games_lado1 === 0) temPneu = true;
+            });
+            if (venci && pSets.length >= 2) {
+                const set1 = pSets[0];
+                const venceuSet1 = (meuLado === 1 && set1.games_lado1 > set1.games_lado2) || (meuLado === 2 && set1.games_lado2 > set1.games_lado1);
+                if (!venceuSet1) temViradao = true;
+            }
+        });
+
+        let maxSeq = 0, seq = 0;
+        resultados.forEach(r => { if (r) { seq++; if (seq > maxSeq) maxSeq = seq; } else seq = 0; });
+        const temV = resultados.some(r => r === 1);
+
+        const checks = {
+            primeira_v:  temV,
+            hat_trick:   maxSeq >= 3,
+            invicto_5:   maxSeq >= 5,
+            veterano_10: totalPart >= 10,
+            lenda_25:    totalPart >= 25,
+            estudioso_5: totalAulas >= 5,
+            academico_20:totalAulas >= 20,
+            pneu:        temPneu,
+            viradao:     temViradao,
+            rei_simp_10: vSimp >= 10,
+            rei_dup_10:  vDup >= 10,
+        };
+
+        const novas = [];
+        for (const [cid, ganhou] of Object.entries(checks)) {
+            if (ganhou && !jaTem.has(cid)) {
+                await supaFetch('conquistas_jogador', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ jogador_id: jogadorId, conquista_id: cid }) }).catch(() => {});
+                novas.push(cid);
+            }
+        }
+        return novas;
+    } catch(e) { return []; }
 }
 
 function getCaract(containerId) {
@@ -948,6 +1033,14 @@ async function registrarAula() {
         alerta('ok', 'Aula registrada!');
         carregarAulas();
 
+        // Verifica conquistas dos alunos
+        ids.forEach(id => {
+            verificarConquistas(parseInt(id)).then(novas => {
+                const meuId = jogadores.find(j => j.user_id === getUserId())?.id;
+                if (parseInt(id) === meuId && novas.length) notificarConquistas(novas);
+            });
+        });
+
         // Toast Gemini comentando a aula
         const profNome = professores.find(p => p.id == profId)?.nome || 'o professor';
         const alunosNomes = ids.map(id => jogadores.find(j => j.id == id)?.nome?.split(' ')[0] || '?').join(', ');
@@ -1049,6 +1142,13 @@ function previewFotoEdit(input) {
 async function carregarJogadores() {
     jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,professor,criado_em,caracteristicas,apelido&order=nome.asc') || [];
     const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
+    const todasConquistas = await supaFetch('conquistas_jogador?select=jogador_id,conquista_id') || [];
+
+    const conquistasPorJogador = {};
+    todasConquistas.forEach(c => {
+        if (!conquistasPorJogador[c.jogador_id]) conquistasPorJogador[c.jogador_id] = [];
+        conquistasPorJogador[c.jogador_id].push(c.conquista_id);
+    });
 
     const stats = {};
     jogadores.forEach(j => stats[j.id] = { v: 0, d: 0 });
@@ -1075,10 +1175,14 @@ async function carregarJogadores() {
             const c = CARACT.find(x => x.id === id);
             return c ? `<span class="badge-caract">${c.emoji} ${c.label}</span>` : '';
         }).join(' ');
+        const conqBadges = (conquistasPorJogador[j.id]||[]).map(cid => {
+            const c = CONQUISTAS.find(x => x.id === cid);
+            return c ? `<span class="badge-caract" title="${c.desc}" style="background:rgba(255,193,7,0.12);color:#ffc107;border-color:rgba(255,193,7,0.3)">${c.emoji} ${c.titulo}</span>` : '';
+        }).join(' ');
         const apelidoHtml = j.apelido ? `<div style="font-size:11px;color:var(--muted);font-style:italic">"${j.apelido}"</div>` : '';
         return `<tr>
             <td>
-                <div class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} <div><div>${j.nome} ${sexoIcon} ${fofoIcon}</div>${apelidoHtml}${caractBadges?`<div style="margin-top:3px">${caractBadges}</div>`:''}</div></div>
+                <div class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} <div><div>${j.nome} ${sexoIcon} ${fofoIcon}</div>${apelidoHtml}${caractBadges?`<div style="margin-top:3px">${caractBadges}</div>`:''}${conqBadges?`<div style="margin-top:3px">${conqBadges}</div>`:''}</div></div>
             </td>
             <td style="color:var(--muted);font-size:12px">${fmtData(j.criado_em)}</td>
             <td><span class="badge-v">${stats[j.id]?.v||0}V</span></td>
@@ -1260,6 +1364,14 @@ async function registrarPartida() {
 
         alerta('ok', `Partida registrada! Vencedor: ${vencedorNome}`);
         carregarHistorico();
+
+        // Verifica conquistas de todos os envolvidos
+        idsEnvolvidos.forEach(id => {
+            verificarConquistas(id).then(novas => {
+                const meuId = jogadores.find(j => j.user_id === getUserId())?.id;
+                if (id === meuId && novas.length) notificarConquistas(novas);
+            });
+        });
 
         // Toast + Gemini + Email — mesma resposta da IA vai para os 3
         const caractInfo = idsEnvolvidos.map(id => {
