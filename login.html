@@ -299,10 +299,25 @@ async function fazerCadastro() {
         if (duplicado) { alerta('erro', `Ja existe um jogador chamado "${duplicado.nome}". Use seu nome completo ou adicione o sobrenome.`); return; }
 
         const data = await authFetch('signup', { email, password: senha, data: { nome } });
+
+        if (!data.access_token) {
+            alerta('ok', 'Conta criada! Verifique seu e-mail para confirmar antes de entrar.');
+            return;
+        }
+
         localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
 
-        // Cria jogador vinculado ao usuario
-        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, email, user_id: data.user.id }) });
+        // Cria jogador usando o token diretamente (sem supaFetch para evitar checagem de sessão)
+        await fetch(`${SUPA_URL}/rest/v1/jogadores`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': `Bearer ${data.access_token}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ nome, email, user_id: data.user.id })
+        });
 
         // Mostra overlay com piada personalizada
         mostrarOverlayPiada(nome);
