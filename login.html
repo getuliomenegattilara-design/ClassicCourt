@@ -171,11 +171,32 @@
                 <input type="email" class="form-control" id="cad-email" placeholder="seu@email.com">
             </div>
         </div>
-        <div class="mb-4">
+        <div class="mb-3">
             <label class="form-label">Senha</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control" id="cad-senha" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key==='Enter') fazerCadastro()">
+                <input type="password" class="form-control" id="cad-senha" placeholder="Mínimo 6 caracteres">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Sexo</label>
+            <div class="d-flex gap-3">
+                <div class="form-check"><input class="form-check-input" type="radio" name="cad-sexo" id="cad-sexo-m" value="M" checked><label class="form-check-label" for="cad-sexo-m" style="font-size:13px">Masculino</label></div>
+                <div class="form-check"><input class="form-check-input" type="radio" name="cad-sexo" id="cad-sexo-f" value="F"><label class="form-check-label" for="cad-sexo-f" style="font-size:13px">Feminino</label></div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Apelido <span style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:normal">(opcional)</span></label>
+            <input type="text" class="form-control" id="cad-apelido" placeholder="Ex: O Slice Master">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Meu estilo no court <span style="color:var(--muted);font-size:10px;text-transform:none;letter-spacing:normal">(opcional, pode marcar vários)</span></label>
+            <div id="cad-caract" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+        </div>
+        <div class="mb-4">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="cad-fofoqueiro">
+                <label class="form-check-label" for="cad-fofoqueiro" style="font-size:13px"><i class="bi bi-bell me-1" style="color:var(--verde)"></i> Receber email de todos os jogos do condomínio</label>
             </div>
         </div>
         <button class="btn-verde" onclick="fazerCadastro()" id="btn-cadastro">
@@ -220,6 +241,37 @@
 
 <script src="config.js"></script>
 <script>
+
+const CARACT_CAD = [
+    {id:'slice',     emoji:'🎯', label:'Só dou slice'},
+    {id:'baloeiro',  emoji:'🎈', label:'Sou baloeiro'},
+    {id:'catimba',   emoji:'😈', label:'Gosto de catimba'},
+    {id:'sol_vento', emoji:'☀️', label:'A culpa é do sol/vento'},
+    {id:'reclama',   emoji:'😤', label:'Reclamo de tudo'},
+    {id:'conta',     emoji:'🤔', label:'Conto games errado'},
+    {id:'devagar',   emoji:'🐢', label:'Demoro entre pontos'},
+    {id:'wimbledon', emoji:'🏆', label:'Celebro como Wimbledon'},
+    {id:'out',       emoji:'👂', label:'Não ouço o out'},
+    {id:'raquete',   emoji:'🤬', label:'Quebraria a raquete'},
+    {id:'ace',       emoji:'💨', label:'Especialista em dupla falta'},
+];
+
+function renderCaractCad() {
+    const sel = new Set();
+    document.getElementById('cad-caract').innerHTML = CARACT_CAD.map(c =>
+        `<span class="badge-caract" data-id="${c.id}" onclick="toggleCaractCad(this)"
+            style="background:rgba(37,99,235,0.12);color:var(--verde);border:1px solid rgba(37,99,235,0.3);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;cursor:pointer">${c.emoji} ${c.label}</span>`
+    ).join('');
+}
+function toggleCaractCad(span) {
+    const ativo = span.classList.toggle('ativo');
+    span.style.background = ativo ? 'rgba(37,99,235,0.3)' : 'rgba(37,99,235,0.12)';
+    span.style.borderColor = ativo ? 'var(--verde)' : 'rgba(37,99,235,0.3)';
+}
+function getCaractCad() {
+    return [...document.querySelectorAll('#cad-caract .badge-caract.ativo')].map(s => s.dataset.id);
+}
+renderCaractCad();
 
 // Log de abertura
 logApp('login', 'App aberto', { ua: navigator.userAgent, url: location.href });
@@ -286,6 +338,10 @@ async function fazerCadastro() {
     const nome  = document.getElementById('cad-nome').value.trim();
     const email = document.getElementById('cad-email').value.trim();
     const senha = document.getElementById('cad-senha').value;
+    const sexo  = document.querySelector('input[name="cad-sexo"]:checked')?.value || 'M';
+    const apelido = document.getElementById('cad-apelido').value.trim();
+    const fofoqueiro = document.getElementById('cad-fofoqueiro').checked;
+    const caracteristicas = getCaractCad();
     if (!nome)         { alerta('erro', 'Informe seu nome.'); return; }
     if (!email)        { alerta('erro', 'Informe seu e-mail.'); return; }
     if (senha.length < 6) { alerta('erro', 'Senha deve ter pelo menos 6 caracteres.'); return; }
@@ -308,6 +364,8 @@ async function fazerCadastro() {
         localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
 
         // Cria jogador usando o token diretamente (sem supaFetch para evitar checagem de sessão)
+        const payload = { nome, email, user_id: data.user.id, sexo, fofoqueiro, caracteristicas };
+        if (apelido) payload.apelido = apelido;
         const jogRes = await fetch(`${SUPA_URL}/rest/v1/jogadores`, {
             method: 'POST',
             headers: {
@@ -316,7 +374,7 @@ async function fazerCadastro() {
                 'Content-Type': 'application/json',
                 'Prefer': 'return=minimal'
             },
-            body: JSON.stringify({ nome, email, user_id: data.user.id })
+            body: JSON.stringify(payload)
         });
         if (!jogRes.ok) {
             const jogErr = await jogRes.json().catch(() => ({}));
