@@ -937,6 +937,8 @@ ${comentario ? `- Observação do professor: ${comentario}` : ''}
 Faça um comentário hilário de 2 frases em português brasileiro informal usando a frequência dos alunos: a primeira zoando carinhosamente quem faltou muito ou elogiando quem foi bastante, a segunda exagerando o elogio ao professor. PROIBIDO: "ótima aula", "parabéns", frases genéricas. Retorne só o texto, sem aspas.`;
         geminiCall(promptAula).then(txt => {
             document.getElementById('toast-msg').textContent = txt || `${alunosNomes} suaram muito hoje! ${profNome} arrasou na quadra! 🎾`;
+        }).catch(() => {
+            document.getElementById('toast-msg').textContent = `${alunosNomes} suaram muito hoje! ${profNome} arrasou na quadra! 🎾`;
         });
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Registrar Aula'; }
@@ -1242,6 +1244,8 @@ Escreva exatamente 2 frases em português brasileiro informal: a primeira zuando
         geminiCall(promptToast).then(txt => {
             if (txt) document.getElementById('toast-msg').textContent = txt;
             else document.getElementById('toast-msg').textContent = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
+        }).catch(() => {
+            document.getElementById('toast-msg').textContent = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
         });
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trophy me-1"></i> Registrar Partida'; }
@@ -1701,9 +1705,14 @@ Partida de ${tipo === 'simples' ? 'simples' : 'duplas'}: ${nomes[0]} vs ${nomes[
 ${caractInfo ? `Estilos: ${caractInfo}` : ''}
 Faça uma previsão cômica em 3 frases: a primeira "prevendo" quem vence e por quê (mencione o estilo de jogo), a segunda descrevendo o momento mais dramático da partida de forma absurda, a terceira um conselho inútil ao futuro perdedor. Seja engraçado e específico. PROIBIDO: "vai ser uma boa partida", frases genéricas. Retorne só o texto.`;
 
-    const txt = await geminiCall(prompt);
-    box.innerHTML = txt ? txt.replace(/\n/g, '<br>') : `Os astros dizem: ${nomes[0]} vai ganhar... ou não. Só jogando pra saber! 🔮`;
-    btn.disabled = false; btn.innerHTML = '🔮 Pedir previsão à IA';
+    try {
+        const txt = await geminiCall(prompt);
+        box.innerHTML = txt ? txt.replace(/\n/g, '<br>') : `Os astros dizem: ${nomes[0]} vai ganhar... ou não. Só jogando pra saber! 🔮`;
+    } catch(e) {
+        box.textContent = `Erro na previsão: ${e.message}`;
+    } finally {
+        btn.disabled = false; btn.innerHTML = '🔮 Pedir previsão à IA';
+    }
 }
 
 // =============================================
