@@ -77,11 +77,7 @@ async function logApp(origem, mensagem, dados = {}) {
 async function geminiCall(prompt) {
     const res = await fetch(SUPA_URL + '/functions/v1/gemini-proxy', {
         method: 'POST',
-        headers: {
-            'apikey': SUPA_KEY,
-            'Authorization': 'Bearer ' + getToken(),
-            'Content-Type': 'application/json'
-        },
+        headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
     });
     const d = await res.json();
