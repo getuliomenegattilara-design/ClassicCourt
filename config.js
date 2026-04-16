@@ -46,19 +46,17 @@ async function logApp(origem, mensagem, dados = {}) {
 }
 
 // =============================================
-// Gemini AI
+// Gemini AI (via Edge Function - chave no servidor)
 // =============================================
-const GEMINI_KEY = 'AIzaSyDSpDzJPyqXfNaFGwrux38o2m0TZUND7KI';
-
 async function geminiCall(prompt) {
     try {
-        const res = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
-            { method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
-        );
+        const res = await fetch(SUPA_URL + '/functions/v1/gemini-proxy', {
+            method: 'POST',
+            headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
         const d = await res.json();
-        return d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        return d.text || '';
     } catch(e) { return ''; }
 }
 
