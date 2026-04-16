@@ -58,6 +58,10 @@ async function supaFetch(path, options = {}) {
 
 async function logApp(origem, mensagem, dados = {}) {
     try {
+        const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
+        const userEmail = session?.user?.email || null;
+        const userNome = session?.user?.user_metadata?.nome || null;
+        const payload = { origem, mensagem, dados: { ...dados, user_email: userEmail, user_nome: userNome } };
         await fetch(SUPA_URL + '/rest/v1/logs', {
             method: 'POST',
             headers: {
@@ -66,7 +70,7 @@ async function logApp(origem, mensagem, dados = {}) {
                 'Content-Type': 'application/json',
                 'Prefer': 'return=minimal'
             },
-            body: JSON.stringify({ origem, mensagem, dados })
+            body: JSON.stringify(payload)
         });
     } catch(e) {}
 }

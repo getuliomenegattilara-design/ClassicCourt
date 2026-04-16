@@ -326,8 +326,10 @@ async function fazerLogin() {
     try {
         const data = await authFetch('token?grant_type=password', { email, password: senha });
         localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
+        logApp('login', 'Login efetuado', { email });
         window.location.href = 'index.html';
     } catch(e) {
+        logApp('login', 'Falha de login', { email });
         alerta('erro', 'E-mail ou senha incorretos.');
     } finally {
         btn.disabled = false; btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Entrar';
