@@ -31,7 +31,7 @@ function expirarSessao() {
 
 // Verifica expiração ao voltar para a aba
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && window.location.pathname !== '/login.html') {
+    if (document.visibilityState === 'visible' && !window.location.href.includes('login.html')) {
         if (sessaoExpirada()) expirarSessao();
     }
 });
