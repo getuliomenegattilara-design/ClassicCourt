@@ -1388,8 +1388,6 @@ async function enviarEmailPartida({ nomes, placar, vencedor, emails, jogador_ids
     });
 }
 
-const REACOES = ['🔥', '😂', '🎾', '💪', '🤝', '😱'];
-
 async function carregarHistorico() {
     if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id&order=nome.asc') || [];
     preencherSelects();
@@ -1403,14 +1401,6 @@ async function carregarHistorico() {
 
     const partidas = await supaFetch(query) || [];
     const sets     = await supaFetch('sets?select=partida_id,numero_set,games_lado1,games_lado2&order=numero_set.asc') || [];
-    const reacoes  = await supaFetch('reacoes_partida?select=partida_id,jogador_id,reacao') || [];
-
-    const reacoesPorPartida = {};
-    reacoes.forEach(r => {
-        if (!reacoesPorPartida[r.partida_id]) reacoesPorPartida[r.partida_id] = {};
-        if (!reacoesPorPartida[r.partida_id][r.reacao]) reacoesPorPartida[r.partida_id][r.reacao] = [];
-        reacoesPorPartida[r.partida_id][r.reacao].push(r.jogador_id);
-    });
 
     document.getElementById('hist-total').textContent = `(${partidas.length} partidas)`;
     const tb = document.getElementById('tb-historico');
@@ -1435,43 +1425,14 @@ async function carregarHistorico() {
             : '';
         const txtWpp = encodeURIComponent(`🎾 *Classic Court*\n${lado1} x ${lado2}\nPlacar: ${placar}\nVencedor: *${venc}*\n\n_Classic Boulevard_`);
         const btnWpp = `<a href="https://wa.me/?text=${txtWpp}" target="_blank" class="btn-act" style="color:#25D366" title="Compartilhar no WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
-
-        const reacoesBar = REACOES.map(emoji => {
-            const jogs = reacoesPorPartida[p.id]?.[emoji] || [];
-            const minha = meuJogadorId && jogs.includes(meuJogadorId);
-            const count = jogs.length;
-            const tooltip = jogs.length ? jogs.map(jid => jogadores.find(j => j.id === jid)?.nome?.split(' ')[0] || '?').join(', ') : '';
-            const estilo = minha
-                ? 'background:rgba(37,99,235,0.18);border-color:var(--verde);color:var(--text)'
-                : count > 0 ? 'background:var(--surface2);border-color:var(--border);color:var(--text)' : 'background:transparent;border-color:var(--border);color:var(--muted);opacity:0.55';
-            return `<button onclick="reagir(${p.id}, '${emoji}')" title="${tooltip}" style="${estilo};border-radius:12px;padding:1px 8px;font-size:12px;cursor:pointer;border:1px solid;line-height:1.4">${emoji}${count > 0 ? ` ${count}` : ''}</button>`;
-        }).join(' ');
-
         return `<tr>
             <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
             <td style="font-size:12px">${lado1} x ${lado2}</td>
             <td style="font-size:12px;color:var(--verde)">${placar}</td>
             <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
             <td class="d-flex align-items-center gap-1">${fotoThumb}${btnWpp}${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
-        </tr>
-        <tr><td colspan="5" style="padding:4px 12px 8px;border-top:none"><div class="d-flex gap-1 flex-wrap">${reacoesBar}</div></td></tr>`;
+        </tr>`;
     }).join('');
-}
-
-async function reagir(partidaId, reacao) {
-    const meu = jogadores.find(j => j.user_id === getUserId());
-    if (!meu) { alerta('erro', 'Faça login para reagir.'); return; }
-    const minhas = await supaFetch(`reacoes_partida?partida_id=eq.${partidaId}&jogador_id=eq.${meu.id}`).catch(() => []) || [];
-    if (minhas.length) {
-        if (minhas[0].reacao === reacao) {
-            await supaFetch(`reacoes_partida?id=eq.${minhas[0].id}`, { method: 'DELETE', prefer: 'return=minimal' }).catch(() => {});
-        } else {
-            await supaFetch(`reacoes_partida?id=eq.${minhas[0].id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ reacao }) }).catch(() => {});
-        }
-    } else {
-        await supaFetch('reacoes_partida', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ partida_id: partidaId, jogador_id: meu.id, reacao }) }).catch(() => {});
-    }
-    carregarHistorico();
 }
 
 function abrirDelPartida(id) { document.getElementById('del-partida-id').value = id; modalDelPartida.show(); }
