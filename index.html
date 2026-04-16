@@ -1198,41 +1198,27 @@ async function registrarPartida() {
         }
         const placarStr = sets.map(s => `${s.games_lado1}x${s.games_lado2}`).join(' | ');
         const vencedorNome = vencedor === 1 ? nomesLado1 : nomesLado2;
+        const perdedorNome = vencedor === 1 ? nomesLado2 : nomesLado1;
 
         // Inclui fofoqueiros que queiram receber todos os jogos
         jogadores.filter(j => j.fofoqueiro && j.email).forEach(j => emailsJogadores.push(j.email));
 
-        // Envia email (sem bloquear se falhar)
-        if (emailsJogadores.length) {
-            const idsEnvolvidos = tipo === 'simples'
-                ? [partida.jogador1_id, partida.jogador2_id]
-                : [partida.dupla1_j1_id, partida.dupla1_j2_id, partida.dupla2_j1_id, partida.dupla2_j2_id];
-            enviarEmailPartida({
-                nomes: `${nomesLado1} x ${nomesLado2}`,
-                placar: placarStr,
-                vencedor: vencedorNome,
-                emails: [...new Set(emailsJogadores)],
-                jogador_ids: idsEnvolvidos,
-                tipo
-            }).catch(() => {});
-        }
+        const idsEnvolvidos = tipo === 'simples'
+            ? [partida.jogador1_id, partida.jogador2_id]
+            : [partida.dupla1_j1_id, partida.dupla1_j2_id, partida.dupla2_j1_id, partida.dupla2_j2_id];
 
         alerta('ok', `Partida registrada! Vencedor: ${vencedorNome}`);
         carregarHistorico();
 
-        // Toast com comentário Gemini
-        const perdedorNome = vencedor === 1 ? nomesLado2 : nomesLado1;
-        const idsToast = tipo === 'simples'
-            ? [partida.jogador1_id, partida.jogador2_id]
-            : [partida.dupla1_j1_id, partida.dupla1_j2_id, partida.dupla2_j1_id, partida.dupla2_j2_id];
-        const caractInfo = idsToast.map(id => {
+        // Toast + Gemini + Email — mesma resposta da IA vai para os 3
+        const caractInfo = idsEnvolvidos.map(id => {
             const j = jogadores.find(x => x.id === id);
             if (!j || !j.caracteristicas?.length) return null;
             const labels = j.caracteristicas.map(cid => CARACT.find(c => c.id === cid)?.label).filter(Boolean);
             return labels.length ? `${j.nome.split(' ')[0]}: ${labels.join(', ')}` : null;
         }).filter(Boolean).join(' | ');
 
-        mostrarToast('Partida registrada! 🏆', 'A IA está analisando o resultado...', 12);
+        mostrarToast('Partida registrada! 🏆', 'A IA está analisando o resultado...', 15);
         const promptToast = `Você é um comentarista de tênis do condomínio Classic Boulevard, bem humorado, sarcástico e sem filtro.
 Dados da partida:
 - Modalidade: ${tipo === 'simples' ? 'simples' : 'duplas'}
@@ -1241,18 +1227,25 @@ Dados da partida:
 - Perdedor: ${perdedorNome}
 ${caractInfo ? `- Estilo dos jogadores: ${caractInfo}` : ''}
 Escreva exatamente 2 frases em português brasileiro informal: a primeira zuando o perdedor pelo placar de forma criativa, a segunda exagerando o elogio ao vencedor. Use gírias, seja engraçado e específico. PROIBIDO: "parabéns", "ótima partida", frases genéricas. Retorne só o texto, sem aspas.`;
+
+        const fallbackComentario = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
+        const emailsUnicos = [...new Set(emailsJogadores)];
+
         geminiCall(promptToast).then(txt => {
-            if (txt) document.getElementById('toast-msg').textContent = txt;
-            else document.getElementById('toast-msg').textContent = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
+            const comentario = txt || fallbackComentario;
+            document.getElementById('toast-msg').textContent = comentario;
+            supaFetch(`partidas?id=eq.${partidaId}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ comentario_ia: comentario }) }).catch(() => {});
+            if (emailsUnicos.length) enviarEmailPartida({ nomes: `${nomesLado1} x ${nomesLado2}`, placar: placarStr, vencedor: vencedorNome, emails: emailsUnicos, jogador_ids: idsEnvolvidos, tipo, comentario_ia: comentario }).catch(() => {});
         }).catch(() => {
-            document.getElementById('toast-msg').textContent = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
+            document.getElementById('toast-msg').textContent = fallbackComentario;
+            if (emailsUnicos.length) enviarEmailPartida({ nomes: `${nomesLado1} x ${nomesLado2}`, placar: placarStr, vencedor: vencedorNome, emails: emailsUnicos, jogador_ids: idsEnvolvidos, tipo, comentario_ia: fallbackComentario }).catch(() => {});
         });
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trophy me-1"></i> Registrar Partida'; }
 }
 
-async function enviarEmailPartida({ nomes, placar, vencedor, emails, jogador_ids, tipo }) {
-    const payload = JSON.stringify({ nomes, placar, vencedor, emails, jogador_ids, tipo });
+async function enviarEmailPartida({ nomes, placar, vencedor, emails, jogador_ids, tipo, comentario_ia }) {
+    const payload = JSON.stringify({ nomes, placar, vencedor, emails, jogador_ids, tipo, comentario_ia });
     await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
