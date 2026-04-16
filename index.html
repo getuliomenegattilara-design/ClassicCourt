@@ -66,6 +66,12 @@
         .dark-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .dark-table thead th { background: var(--surface2); color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; padding: 8px 12px; border-bottom: 1px solid var(--border); }
         .dark-table tbody td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+        @media (max-width: 640px) {
+            .dark-table thead th { padding: 6px 5px; font-size: 10px; letter-spacing: 0.3px; }
+            .dark-table tbody td { padding: 5px 5px; font-size: 11px !important; }
+            .dark-table { font-size: 11px; }
+            .badge-v, .badge-d { padding: 1px 5px; font-size: 10px !important; }
+        }
         .dark-table tbody tr:last-child td { border-bottom: none; }
         .dark-table tbody tr:hover { background: rgba(37,99,235,0.05); }
 
