@@ -152,6 +152,7 @@
                 <li class="nav-item"><a class="nav-link" href="#" data-tab="jogadores"><i class="bi bi-people me-1"></i>Jogadores</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-tab="ranking"><i class="bi bi-bar-chart me-1"></i>Ranking</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-tab="confronto"><i class="bi bi-slash-circle me-1"></i>Confronto</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="aulas"><i class="bi bi-journal-text me-1"></i>Aulas</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" data-tab="sobre"><i class="bi bi-info-circle me-1"></i>Sobre</a></li>
             </ul>
         </nav>
@@ -274,6 +275,13 @@
                             <div class="set-row"><span class="set-label">Set 3</span><input type="number" class="form-control" id="s3l1" min="0" max="7" placeholder="0"><span class="sep">x</span><input type="number" class="form-control" id="s3l2" min="0" max="7" placeholder="0"></div>
                         </div>
                         <div class="mt-1 mb-3" style="font-size:11px;color:var(--muted)">Deixe em branco os sets não jogados</div>
+                        <div class="mb-3">
+                            <label class="form-label">Foto da Partida <span style="color:var(--muted);font-size:10px">(opcional)</span></label>
+                            <div class="foto-wrap">
+                                <img id="partida-foto-preview" class="foto-preview" src="">
+                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Adicionar foto<input type="file" id="partida-foto-input" accept="image/*" style="display:none" onchange="previewFotoPartida(this)"></label>
+                            </div>
+                        </div>
                         <button class="btn-verde w-100" onclick="registrarPartida()" id="btn-registrar"><i class="bi bi-trophy me-1"></i> Registrar Partida</button>
                     </div>
                 </div>
@@ -451,6 +459,66 @@
                                 <tbody id="tb-confronto"></tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AULAS -->
+    <div class="tab-pane" id="tab-aulas">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-journal-plus"></i></div><h6>Registrar Aula</h6></div></div>
+                    <div class="p-3">
+                        <div class="mb-3">
+                            <label class="form-label">Data da Aula</label>
+                            <input type="date" class="form-control" id="aula-data">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Professor</label>
+                            <select class="form-select" id="aula-professor">
+                                <option value="">-- Selecione --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Alunos <span style="color:var(--muted);font-size:10px">(mínimo 1)</span></label>
+                            <div class="d-flex flex-column gap-2">
+                                <select class="form-select" id="aula-a1"><option value="">-- Aluno 1 --</option></select>
+                                <select class="form-select" id="aula-a2"><option value="">-- Aluno 2 (opcional) --</option></select>
+                                <select class="form-select" id="aula-a3"><option value="">-- Aluno 3 (opcional) --</option></select>
+                                <select class="form-select" id="aula-a4"><option value="">-- Aluno 4 (opcional) --</option></select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Comentário</label>
+                            <textarea class="form-control" id="aula-comentario" rows="3" placeholder="Como foi a aula, exercícios, observações..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Foto <span style="color:var(--muted);font-size:10px">(opcional)</span></label>
+                            <div class="foto-wrap">
+                                <img id="aula-foto-preview" class="foto-preview" src="">
+                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Adicionar foto<input type="file" id="aula-foto-input" accept="image/*" style="display:none" onchange="previewFotoAula(this)"></label>
+                            </div>
+                        </div>
+                        <button class="btn-verde w-100" onclick="registrarAula()" id="btn-aula"><i class="bi bi-floppy me-1"></i> Registrar Aula</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="section-card">
+                    <div class="section-top">
+                        <div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-list-ul"></i></div><h6>Histórico de Aulas <span id="aulas-total" style="color:var(--muted);font-weight:400;font-size:11px"></span></h6></div>
+                        <select class="form-select form-select-sm" id="filtro-aula-prof" onchange="carregarAulas()" style="width:160px;font-size:12px">
+                            <option value="">Todos os professores</option>
+                        </select>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="dark-table">
+                            <thead><tr><th>Data</th><th>Professor</th><th>Alunos</th><th>Comentário</th><th></th></tr></thead>
+                            <tbody id="tb-aulas"><tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -655,6 +723,7 @@ function irTab(tab) {
     if (tab === 'partidas')  { carregarHistorico(); preencherSelects(); }
     if (tab === 'jogadores') carregarJogadores();
     if (tab === 'ranking')   carregarRanking();
+    if (tab === 'aulas')     carregarAulas();
     if (tab === 'confronto') preencherSelectsConfronto();
 }
 
@@ -710,21 +779,131 @@ function fotoPorId(id) {
 // =============================================
 // Storage — upload de foto
 // =============================================
-async function uploadFoto(file, nomeJogador) {
+async function uploadArquivo(file, pasta) {
     const ext  = file.name.split('.').pop();
-    const path = `${nomeJogador.replace(/\s+/g,'_')}_${Date.now()}.${ext}`;
+    const path = `${pasta}/${Date.now()}.${ext}`;
     const res  = await fetch(`${SUPA_URL}/storage/v1/object/avatars/${path}`, {
         method: 'POST',
-        headers: {
-            'apikey': SUPA_KEY,
-            'Authorization': 'Bearer ' + SUPA_KEY,
-            'Content-Type': file.type,
-            'x-upsert': 'true'
-        },
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': file.type, 'x-upsert': 'true' },
         body: file
     });
     if (!res.ok) throw new Error('Falha no upload da foto');
     return `${SUPA_URL}/storage/v1/object/public/avatars/${path}`;
+}
+
+async function uploadFoto(file, nomeJogador) {
+    return uploadArquivo(file, 'jogadores');
+}
+
+function previewFotoPartida(input) {
+    const prev = document.getElementById('partida-foto-preview');
+    if (input.files[0]) { prev.src = URL.createObjectURL(input.files[0]); prev.style.display = 'block'; }
+}
+
+function previewFotoAula(input) {
+    const prev = document.getElementById('aula-foto-preview');
+    if (input.files[0]) { prev.src = URL.createObjectURL(input.files[0]); prev.style.display = 'block'; }
+}
+
+// =============================================
+// Professores e Aulas
+// =============================================
+let professores = [];
+
+async function carregarProfessores() {
+    professores = await supaFetch('professores?select=id,nome&order=nome.asc') || [];
+    ['aula-professor', 'filtro-aula-prof'].forEach(selId => {
+        const sel = document.getElementById(selId);
+        if (!sel) return;
+        const first = sel.options[0].outerHTML;
+        sel.innerHTML = first + professores.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+    });
+}
+
+async function preencherAlunosSelects() {
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome&order=nome.asc') || [];
+    ['aula-a1','aula-a2','aula-a3','aula-a4'].forEach((selId, i) => {
+        const sel = document.getElementById(selId);
+        const placeholder = i === 0 ? '-- Aluno 1 --' : `-- Aluno ${i+1} (opcional) --`;
+        sel.innerHTML = `<option value="">${placeholder}</option>` + jogadores.map(j => `<option value="${j.id}">${j.nome}</option>`).join('');
+    });
+}
+
+async function registrarAula() {
+    const data      = document.getElementById('aula-data').value;
+    const profId    = document.getElementById('aula-professor').value;
+    const comentario = document.getElementById('aula-comentario').value.trim();
+    const ids       = ['aula-a1','aula-a2','aula-a3','aula-a4'].map(id => document.getElementById(id).value).filter(Boolean);
+
+    if (!data)       { alerta('erro', 'Informe a data da aula.'); return; }
+    if (!profId)     { alerta('erro', 'Selecione o professor.'); return; }
+    if (!ids.length) { alerta('erro', 'Selecione pelo menos 1 aluno.'); return; }
+    if (new Set(ids).size < ids.length) { alerta('erro', 'Alunos não podem se repetir.'); return; }
+
+    const btn = document.getElementById('btn-aula');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Salvando...';
+    try {
+        let foto_url = null;
+        const fotoFile = document.getElementById('aula-foto-input').files[0];
+        if (fotoFile) foto_url = await uploadArquivo(fotoFile, 'aulas');
+
+        const payload = {
+            data_aula: data,
+            professor_id: parseInt(profId),
+            aluno1_id: parseInt(ids[0]) || null,
+            aluno2_id: parseInt(ids[1]) || null,
+            aluno3_id: parseInt(ids[2]) || null,
+            aluno4_id: parseInt(ids[3]) || null,
+            comentario: comentario || null,
+            foto_url,
+            criado_por: getUserId()
+        };
+        await supaFetch('aulas', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(payload) });
+
+        // Limpa form
+        document.getElementById('aula-data').value = '';
+        document.getElementById('aula-professor').value = '';
+        document.getElementById('aula-comentario').value = '';
+        ['aula-a1','aula-a2','aula-a3','aula-a4'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('aula-foto-input').value = '';
+        document.getElementById('aula-foto-preview').style.display = 'none';
+
+        alerta('ok', 'Aula registrada!');
+        carregarAulas();
+    } catch(e) { alerta('erro', 'Erro: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Registrar Aula'; }
+}
+
+async function carregarAulas() {
+    if (!professores.length) await carregarProfessores();
+    await preencherAlunosSelects();
+
+    const filtroProf = document.getElementById('filtro-aula-prof').value;
+    let query = 'aulas?select=id,data_aula,professor_id,aluno1_id,aluno2_id,aluno3_id,aluno4_id,comentario,foto_url&order=data_aula.desc&limit=100';
+    if (filtroProf) query += `&professor_id=eq.${filtroProf}`;
+
+    const aulas = await supaFetch(query) || [];
+    document.getElementById('aulas-total').textContent = `(${aulas.length})`;
+
+    const tb = document.getElementById('tb-aulas');
+    if (!aulas.length) { tb.innerHTML = '<tr><td colspan="5" class="text-center py-3" style="color:var(--muted);font-style:italic">Nenhuma aula registrada.</td></tr>'; return; }
+
+    tb.innerHTML = aulas.map(a => {
+        const prof     = professores.find(p => p.id === a.professor_id)?.nome || '—';
+        const alunosIds = [a.aluno1_id, a.aluno2_id, a.aluno3_id, a.aluno4_id].filter(Boolean);
+        const alunos   = alunosIds.map(id => jogadores.find(j => j.id === id)?.nome?.split(' ')[0] || '?').join(', ');
+        const fotoHtml = a.foto_url
+            ? `<a href="${a.foto_url}" target="_blank"><img src="${a.foto_url}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"></a>`
+            : '';
+        const coment   = a.comentario ? `<span style="font-size:11px;color:var(--muted)" title="${a.comentario}">${a.comentario.slice(0,40)}${a.comentario.length>40?'…':''}</span>` : '';
+        return `<tr>
+            <td style="font-size:12px;color:var(--muted)">${fmtData(a.data_aula)}</td>
+            <td style="font-size:13px">${prof}</td>
+            <td style="font-size:12px">${alunos}</td>
+            <td>${coment}</td>
+            <td>${fotoHtml}</td>
+        </tr>`;
+    }).join('');
 }
 
 function previewFoto(input) {
@@ -915,10 +1094,15 @@ async function registrarPartida() {
     const btn = document.getElementById('btn-registrar');
     btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando...';
     try {
+        const fotoFilePartida = document.getElementById('partida-foto-input').files[0];
+        if (fotoFilePartida) partida.foto_url = await uploadArquivo(fotoFilePartida, 'partidas');
+
         const res = await supaFetch('partidas', { method: 'POST', prefer: 'return=representation', body: JSON.stringify(partida) });
         const partidaId = res[0].id;
         for (const s of sets) await supaFetch('sets', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ ...s, partida_id: partidaId }) });
         ['s1l1','s1l2','s2l1','s2l2','s3l1','s3l2'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('partida-foto-input').value = '';
+        document.getElementById('partida-foto-preview').style.display = 'none';
 
         // Monta dados para email
         let nomesLado1, nomesLado2, emailsJogadores = [];
@@ -1004,7 +1188,7 @@ async function carregarHistorico() {
     preencherSelects();
 
     const filtroId = document.getElementById('filtro-jogador').value;
-    let query = 'partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor&order=data_partida.desc&limit=100';
+    let query = 'partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor,foto_url&order=data_partida.desc&limit=100';
 
     if (filtroId) {
         query += `&or=(jogador1_id.eq.${filtroId},jogador2_id.eq.${filtroId},dupla1_j1_id.eq.${filtroId},dupla1_j2_id.eq.${filtroId},dupla2_j1_id.eq.${filtroId},dupla2_j2_id.eq.${filtroId})`;
@@ -1031,12 +1215,15 @@ async function carregarHistorico() {
         venc = p.vencedor == 1 ? lado1 : lado2;
         const idsPartida = [p.jogador1_id, p.jogador2_id, p.dupla1_j1_id, p.dupla1_j2_id, p.dupla2_j1_id, p.dupla2_j2_id];
         const podeExcluir = meuJogadorId && idsPartida.includes(meuJogadorId);
+        const fotoThumb = p.foto_url
+            ? `<a href="${p.foto_url}" target="_blank"><img src="${p.foto_url}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;border:1px solid var(--border)"></a>`
+            : '';
         return `<tr>
             <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
             <td style="font-size:12px">${lado1} x ${lado2}</td>
             <td style="font-size:12px;color:var(--verde)">${placar}</td>
             <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
-            <td>${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
+            <td class="d-flex align-items-center gap-1">${fotoThumb}${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
         </tr>`;
     }).join('');
 }
