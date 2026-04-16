@@ -132,6 +132,11 @@
 
         /* Badges caracteristicas */
         .badge-caract { background:rgba(37,99,235,0.12); color:var(--verde); border:1px solid rgba(37,99,235,0.3); border-radius:20px; padding:1px 8px; font-size:10px; font-weight:600; white-space:nowrap; }
+
+        /* Filtro ranking */
+        .btn-rk-filtro { background:transparent; border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:3px 10px; font-size:11px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+        .btn-rk-filtro:hover { color:var(--text); border-color:var(--verde); }
+        .btn-rk-filtro.ativo { background:var(--verde); color:#fff; border-color:var(--verde); }
     </style>
 </head>
 <body>
@@ -392,7 +397,14 @@
                 </div>
 
                 <div class="section-card">
-                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-bar-chart"></i></div><h6>Ranking Geral — Classic Boulevard</h6></div></div>
+                    <div class="section-top">
+                        <div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-bar-chart"></i></div><h6>Ranking — Classic Boulevard</h6></div>
+                        <div class="d-flex gap-1" id="rk-filtro">
+                            <button class="btn-rk-filtro ativo" data-tipo="geral">Geral</button>
+                            <button class="btn-rk-filtro" data-tipo="simples">Simples</button>
+                            <button class="btn-rk-filtro" data-tipo="duplas">Duplas</button>
+                        </div>
+                    </div>
                     <div class="table-responsive">
                         <table class="dark-table">
                             <thead><tr><th>#</th><th>Jogador</th><th>Partidas</th><th>Vitorias</th><th>Derrotas</th><th>Sets V</th><th>Sets D</th><th>Aproveit.</th></tr></thead>
@@ -1684,10 +1696,24 @@ async function carregarRanking() {
     renderRankingSarcastico(partidas);
     renderEvolucao(partidas);
 
+    // Setup dos filtros (só primeira vez)
+    document.querySelectorAll('#rk-filtro .btn-rk-filtro').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('#rk-filtro .btn-rk-filtro').forEach(b => b.classList.remove('ativo'));
+            btn.classList.add('ativo');
+            renderRankingTabela(partidas, sets, btn.dataset.tipo);
+        };
+    });
+
+    renderRankingTabela(partidas, sets, 'geral');
+}
+
+function renderRankingTabela(partidas, sets, filtro) {
+    const parts = filtro === 'geral' ? partidas : partidas.filter(p => p.tipo === filtro);
     const stats = {};
     jogadores.forEach(j => stats[j.id] = { nome: j.nome, foto: j.foto_url, p: 0, v: 0, d: 0, sv: 0, sd: 0 });
 
-    partidas.forEach(p => {
+    parts.forEach(p => {
         const pSets = sets.filter(s => s.partida_id === p.id);
         const sv1 = pSets.reduce((a,s) => a+s.games_lado1, 0);
         const sv2 = pSets.reduce((a,s) => a+s.games_lado2, 0);
@@ -1697,9 +1723,9 @@ async function carregarRanking() {
         l2.forEach(id => { if (id&&stats[id]) { stats[id].p++; p.vencedor==2?stats[id].v++:stats[id].d++; stats[id].sv+=sv2; stats[id].sd+=sv1; }});
     });
 
-    const ranking = Object.entries(stats).map(([id,s]) => ({ ...s, id, pct: s.p>0?Math.round(s.v/s.p*100):0 })).sort((a,b) => b.pct-a.pct||b.v-a.v);
+    const ranking = Object.entries(stats).filter(([,s]) => s.p > 0).map(([id,s]) => ({ ...s, id, pct: s.p>0?Math.round(s.v/s.p*100):0 })).sort((a,b) => b.pct-a.pct||b.v-a.v);
     const tb = document.getElementById('tb-ranking');
-    if (!ranking.length) { tb.innerHTML = '<tr><td colspan="8" class="text-center py-3" style="color:var(--muted)">Sem dados ainda.</td></tr>'; return; }
+    if (!ranking.length) { tb.innerHTML = '<tr><td colspan="8" class="text-center py-3" style="color:var(--muted)">Sem partidas deste tipo ainda.</td></tr>'; return; }
     tb.innerHTML = ranking.map((r,i) => `
         <tr>
             <td><span class="rank-num ${rankClass(i)}">${i+1}</span></td>
