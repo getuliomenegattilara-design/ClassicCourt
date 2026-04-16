@@ -1413,15 +1413,15 @@ function analisarPerfilPessoal(partidas) {
         .filter(([id, s]) => s.t >= 2)
         .sort(([,a],[,b]) => b.v - a.v || (b.v/b.t) - (a.v/a.t))[0];
 
-    // Vítima favorita: quem você mais derrota (mínimo 2 partidas)
+    // Vítima favorita: quem você vence mais do que perde (mínimo 2 partidas)
     const vitima = Object.entries(adversarios)
-        .filter(([id, s]) => s.t >= 2)
-        .sort(([,a],[,b]) => b.v - a.v)[0];
+        .filter(([id, s]) => s.t >= 2 && s.v > s.d)
+        .sort(([,a],[,b]) => (b.v - b.d) - (a.v - a.d) || b.v - a.v)[0];
 
-    // Némesis: quem mais te derrota (mínimo 2 partidas)
+    // Némesis: quem te vence mais do que você vence (mínimo 2 partidas)
     const nemesis = Object.entries(adversarios)
-        .filter(([id, s]) => s.t >= 2)
-        .sort(([,a],[,b]) => b.d - a.d)[0];
+        .filter(([id, s]) => s.t >= 2 && s.d > s.v)
+        .sort(([,a],[,b]) => (b.d - b.v) - (a.d - a.v) || b.d - a.d)[0];
 
     const nomePorId = (id) => jogadores.find(j => j.id == id)?.nome?.split(' ')[0] || '?';
 
