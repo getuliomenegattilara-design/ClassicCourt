@@ -442,6 +442,13 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="section-card mt-3">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box">😈</div><h6>Ranking Sarcástico — Ninguém se safa</h6></div></div>
+                    <div class="row g-2 p-3" id="ranking-sarcastico">
+                        <div class="col-12 text-center py-3" style="color:var(--muted)">Carregando...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1453,6 +1460,63 @@ function analisarPerfilPessoal(partidas) {
 }
 
 // =============================================
+// Ranking Sarcástico
+// =============================================
+async function renderRankingSarcastico(partidas) {
+    const box = document.getElementById('ranking-sarcastico');
+    if (!box) return;
+
+    const aulas = await supaFetch('aulas?select=aluno1_id,aluno2_id,aluno3_id,aluno4_id').catch(() => []) || [];
+    const elegiveis = jogadores.filter(j => !j.professor);
+
+    const stats = {};
+    elegiveis.forEach(j => stats[j.id] = { nome: j.nome, p: 0, v: 0, d: 0, vSimp: 0, vDup: 0, aulas: 0 });
+
+    partidas.forEach(p => {
+        const l1 = p.tipo === 'simples' ? [p.jogador1_id] : [p.dupla1_j1_id, p.dupla1_j2_id];
+        const l2 = p.tipo === 'simples' ? [p.jogador2_id] : [p.dupla2_j1_id, p.dupla2_j2_id];
+        l1.forEach(id => { if (id && stats[id]) { stats[id].p++; if (p.vencedor == 1) { stats[id].v++; p.tipo==='simples'?stats[id].vSimp++:stats[id].vDup++; } else stats[id].d++; } });
+        l2.forEach(id => { if (id && stats[id]) { stats[id].p++; if (p.vencedor == 2) { stats[id].v++; p.tipo==='simples'?stats[id].vSimp++:stats[id].vDup++; } else stats[id].d++; } });
+    });
+
+    aulas.forEach(a => {
+        [a.aluno1_id, a.aluno2_id, a.aluno3_id, a.aluno4_id].forEach(id => {
+            if (id && stats[id]) stats[id].aulas++;
+        });
+    });
+
+    const arr = Object.entries(stats).map(([id, s]) => ({ id, ...s }));
+    const primNome = (s) => s?.nome?.split(' ')[0] || '—';
+
+    const eternoVice = [...arr].filter(s => s.p >= 2).sort((a,b) => b.d - a.d)[0];
+    const duplaFalta = [...arr].filter(s => s.p >= 3).sort((a,b) => (a.v/a.p) - (b.v/b.p))[0];
+    const jogaram = arr.filter(s => s.p >= 1);
+    const fantasma = jogaram.length ? [...jogaram].sort((a,b) => a.p - b.p)[0] : null;
+    const teorico = [...arr].filter(s => s.aulas >= 3).sort((a,b) => (b.aulas - b.p*2) - (a.aulas - a.p*2))[0];
+    const reiDuplas = [...arr].sort((a,b) => b.vDup - a.vDup)[0];
+    const reiSimp = [...arr].sort((a,b) => b.vSimp - a.vSimp)[0];
+
+    const cards = [
+        { emoji: '💀', titulo: 'O Eterno Vice', jog: eternoVice, info: eternoVice ? `${eternoVice.d} derrotas` : '', cor: '#e74c3c' },
+        { emoji: '🎯', titulo: 'Dupla Falta',   jog: duplaFalta, info: duplaFalta ? `${Math.round(duplaFalta.v/duplaFalta.p*100)}% aproveit.` : '', cor: '#e67e22' },
+        { emoji: '👻', titulo: 'O Fantasma',    jog: fantasma, info: fantasma ? `só ${fantasma.p} partida${fantasma.p>1?'s':''}` : '', cor: '#95a5a6' },
+        { emoji: '📚', titulo: 'O Teórico',     jog: teorico, info: teorico ? `${teorico.aulas} aulas x ${teorico.p} partidas` : '', cor: '#3498db' },
+        { emoji: '🎾', titulo: 'Rei das Duplas', jog: reiDuplas && reiDuplas.vDup > 0 ? reiDuplas : null, info: reiDuplas && reiDuplas.vDup > 0 ? `${reiDuplas.vDup} V em duplas` : '', cor: 'var(--verde)' },
+        { emoji: '🤝', titulo: 'Rei dos Singles', jog: reiSimp && reiSimp.vSimp > 0 ? reiSimp : null, info: reiSimp && reiSimp.vSimp > 0 ? `${reiSimp.vSimp} V em simples` : '', cor: 'var(--verde)' },
+    ];
+
+    box.innerHTML = cards.map(c => `
+        <div class="col-md-6 col-lg-4">
+            <div class="vs-card" style="text-align:left;padding:14px">
+                <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:4px">${c.emoji} ${c.titulo}</div>
+                <div style="font-weight:700;font-size:15px;color:${c.cor}">${c.jog ? primNome(c.jog) : 'Sem dados'}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">${c.info || '—'}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// =============================================
 // Ranking
 // =============================================
 async function carregarRanking() {
@@ -1461,6 +1525,7 @@ async function carregarRanking() {
     const sets     = await supaFetch('sets?select=partida_id,games_lado1,games_lado2') || [];
 
     analisarPerfilPessoal(partidas);
+    renderRankingSarcastico(partidas);
 
     const stats = {};
     jogadores.forEach(j => stats[j.id] = { nome: j.nome, foto: j.foto_url, p: 0, v: 0, d: 0, sv: 0, sd: 0 });
