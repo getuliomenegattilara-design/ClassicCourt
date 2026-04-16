@@ -585,23 +585,19 @@ const CARACT = [
 function renderCaract(containerId, selecionadas = []) {
     document.getElementById(containerId).innerHTML = CARACT.map(c => {
         const ativo = selecionadas.includes(c.id);
-        return `<label style="cursor:pointer">
-            <input type="checkbox" name="${containerId}-c" value="${c.id}" ${ativo?'checked':''} style="display:none">
-            <span class="badge-caract" style="${ativo?'background:rgba(196,120,80,0.3);border-color:var(--verde)':''}"
-                  onclick="toggleCaract(this)">${c.emoji} ${c.label}</span>
-        </label>`;
+        return `<span class="badge-caract ${ativo?'ativo':''}" data-id="${c.id}" onclick="toggleCaract(this)"
+            style="cursor:pointer;${ativo?'background:rgba(196,120,80,0.3);border-color:var(--verde)':''}">${c.emoji} ${c.label}</span>`;
     }).join('');
 }
 
 function toggleCaract(span) {
-    const cb = span.previousElementSibling;
-    cb.checked = !cb.checked;
-    span.style.background = cb.checked ? 'rgba(196,120,80,0.3)' : 'rgba(196,120,80,0.12)';
-    span.style.borderColor = cb.checked ? 'var(--verde)' : 'rgba(196,120,80,0.3)';
+    const ativo = span.classList.toggle('ativo');
+    span.style.background = ativo ? 'rgba(196,120,80,0.3)' : 'rgba(196,120,80,0.12)';
+    span.style.borderColor = ativo ? 'var(--verde)' : 'rgba(196,120,80,0.3)';
 }
 
 function getCaract(containerId) {
-    return [...document.querySelectorAll(`input[name="${containerId}-c"]:checked`)].map(c => c.value);
+    return [...document.querySelectorAll(`#${containerId} .badge-caract.ativo`)].map(s => s.dataset.id);
 }
 
 // =============================================
