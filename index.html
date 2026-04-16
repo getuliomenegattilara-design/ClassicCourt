@@ -863,11 +863,12 @@ async function carregarProfessores() {
 }
 
 async function preencherAlunosSelects() {
-    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome&order=nome.asc') || [];
+    if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,professor&order=nome.asc') || [];
+    const alunos = jogadores.filter(j => !j.professor);
     ['aula-a1','aula-a2','aula-a3','aula-a4'].forEach((selId, i) => {
         const sel = document.getElementById(selId);
         const placeholder = i === 0 ? '-- Aluno 1 --' : `-- Aluno ${i+1} (opcional) --`;
-        sel.innerHTML = `<option value="">${placeholder}</option>` + jogadores.map(j => `<option value="${j.id}">${j.nome}</option>`).join('');
+        sel.innerHTML = `<option value="">${placeholder}</option>` + alunos.map(j => `<option value="${j.id}">${j.nome}</option>`).join('');
     });
 }
 
@@ -934,10 +935,11 @@ Uma aula de tênis acabou de acontecer:
 - Frequência no último mês: ${frequencia}
 ${comentario ? `- Observação do professor: ${comentario}` : ''}
 Faça um comentário hilário de 2 frases em português brasileiro informal usando a frequência dos alunos: a primeira zoando carinhosamente quem faltou muito ou elogiando quem foi bastante, a segunda exagerando o elogio ao professor. PROIBIDO: "ótima aula", "parabéns", frases genéricas. Retorne só o texto, sem aspas.`;
+        const fallbackAula = `${alunosNomes} suaram muito hoje! ${profNome} conduziu mais uma aula incrível! 🎾`;
         geminiCall(promptAula).then(txt => {
-            document.getElementById('toast-msg').textContent = txt || `${alunosNomes} suaram muito hoje! ${profNome} arrasou na quadra! 🎾`;
+            document.getElementById('toast-msg').textContent = txt || fallbackAula;
         }).catch(() => {
-            document.getElementById('toast-msg').textContent = `${alunosNomes} suaram muito hoje! ${profNome} arrasou na quadra! 🎾`;
+            document.getElementById('toast-msg').textContent = fallbackAula;
         });
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Registrar Aula'; }
