@@ -876,6 +876,7 @@ function sair() {
 
 // Define data de hoje no campo
 document.getElementById('data-partida').value = new Date().toISOString().split('T')[0];
+document.getElementById('aula-data').value = new Date().toISOString().split('T')[0];
 
 // =============================================
 // Navegacao
@@ -1032,7 +1033,7 @@ async function registrarAula() {
         await supaFetch('aulas', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify(payload) });
 
         // Limpa form
-        document.getElementById('aula-data').value = '';
+        document.getElementById('aula-data').value = new Date().toISOString().split('T')[0];
         document.getElementById('aula-comentario').value = '';
         ['aula-a1','aula-a2','aula-a3','aula-a4'].forEach(id => document.getElementById(id).value = '');
         document.getElementById('aula-foto-input').value = '';
