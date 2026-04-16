@@ -100,6 +100,18 @@
         .alert-err { background: rgba(231,76,60,0.1);  border: 1px solid rgba(231,76,60,0.3);  color: #fca5a5; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
 
         .link-btn { background: none; border: none; color: var(--verde); font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
+
+        /* Overlay piada boas-vindas */
+        #overlay-piada { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; padding:20px; }
+        .piada-card { background:var(--surface); border:2px solid var(--verde); border-radius:22px; padding:36px 28px; max-width:380px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.6); animation: popIn 0.4s cubic-bezier(.17,.67,.32,1.3); }
+        @keyframes popIn { from { transform:scale(0.7); opacity:0; } to { transform:scale(1); opacity:1; } }
+        .piada-emoji { font-size:52px; margin-bottom:12px; display:block; }
+        .piada-texto { color:var(--text); font-size:14px; line-height:1.6; margin:12px 0 24px; min-height:60px; }
+        .piada-dots { display:inline-flex; gap:6px; }
+        .piada-dots span { width:8px; height:8px; border-radius:50%; background:var(--verde); animation:bounce 1.2s infinite; }
+        .piada-dots span:nth-child(2) { animation-delay:.2s; }
+        .piada-dots span:nth-child(3) { animation-delay:.4s; }
+        @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-8px)} }
     </style>
 </head>
 <body>
@@ -191,6 +203,21 @@
 
 </div>
 
+<!-- Overlay piada boas-vindas -->
+<div id="overlay-piada">
+    <div class="piada-card">
+        <span class="piada-emoji">🎾</span>
+        <h5 style="color:var(--verde);font-weight:800;margin:0 0 4px" id="piada-titulo">Bem-vindo ao court!</h5>
+        <p style="color:var(--muted);font-size:12px;margin:0 0 12px">Um recado especial da IA do clube...</p>
+        <div class="piada-texto" id="piada-texto">
+            <div class="piada-dots"><span></span><span></span><span></span></div>
+        </div>
+        <button class="btn-verde" id="btn-entrar-court" onclick="entrarNoCourt()" disabled style="opacity:0.5;cursor:not-allowed">
+            <i class="bi bi-door-open me-2"></i> Entrar no court!
+        </button>
+    </div>
+</div>
+
 <script src="config.js"></script>
 <script>
 
@@ -272,7 +299,8 @@ async function fazerCadastro() {
         // Cria jogador vinculado ao usuario
         await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, email, user_id: data.user.id }) });
 
-        window.location.href = 'index.html';
+        // Mostra overlay com piada personalizada
+        mostrarOverlayPiada(nome);
     } catch(e) {
         alerta('erro', e.message);
     } finally {
@@ -282,6 +310,33 @@ async function fazerCadastro() {
 
 const isWebView = /wv|WebView/.test(navigator.userAgent) || (window.Android !== undefined);
 if ('serviceWorker' in navigator && !isWebView) navigator.serviceWorker.register('sw.js');
+
+function entrarNoCourt() { window.location.href = 'index.html'; }
+
+async function mostrarOverlayPiada(nome) {
+    const overlay = document.getElementById('overlay-piada');
+    document.getElementById('piada-titulo').textContent = 'Bem-vindo, ' + nome.split(' ')[0] + '!';
+    overlay.style.display = 'flex';
+
+    // Timeout de segurança: libera o botão em 8s mesmo se Gemini demorar
+    const timer = setTimeout(() => {
+        document.getElementById('piada-texto').textContent = 'Seja bem-vindo ao Classic Court! Boas raquetadas! 🎾';
+        liberarBotaoPiada();
+    }, 8000);
+
+    const prompt = `Faça uma piada curta e bem humorada de tênis sobre alguém chamado ${nome} que acabou de entrar num app de tênis do condomínio. Use o nome na piada. Máximo 2 frases engraçadas. Escreva em português brasileiro informal.`;
+    const piada = await geminiCall(prompt);
+    clearTimeout(timer);
+    document.getElementById('piada-texto').textContent = piada || `${nome.split(' ')[0]}, o court vai tremer quando você aparecer! 🎾`;
+    liberarBotaoPiada();
+}
+
+function liberarBotaoPiada() {
+    const btn = document.getElementById('btn-entrar-court');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+}
 
 async function recuperarSenha() {
     const email = document.getElementById('rec-email').value.trim();

@@ -123,6 +123,15 @@
         /* Input file customizado */
         .btn-upload { background: var(--surface2); border: 1px dashed var(--border); color: var(--muted); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
         .btn-upload:hover { border-color: var(--verde); color: var(--verde); }
+
+        /* Toast pos-partida */
+        #toast-partida { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--verde); border-radius:14px; padding:14px 18px; max-width:440px; width:calc(100% - 32px); z-index:8000; box-shadow:0 8px 32px rgba(0,0,0,0.5); display:none; animation:slideDown 0.4s ease; }
+        @keyframes slideDown { from { top:-100px; opacity:0; } to { top:20px; opacity:1; } }
+        .toast-progress { height:3px; background:var(--border); border-radius:2px; margin-top:10px; overflow:hidden; }
+        .toast-bar { height:100%; background:var(--verde); border-radius:2px; }
+
+        /* Badges caracteristicas */
+        .badge-caract { background:rgba(196,120,80,0.12); color:var(--verde); border:1px solid rgba(196,120,80,0.3); border-radius:20px; padding:1px 8px; font-size:10px; font-weight:600; white-space:nowrap; }
     </style>
 </head>
 <body>
@@ -326,6 +335,10 @@
                                 <label class="form-check-label" for="fofoqueiro" style="font-size:13px"><i class="bi bi-bell me-1" style="color:var(--verde)"></i> Receber email de todos os jogos</label>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Meu estilo no court <span style="color:var(--muted);font-size:10px">(pode marcar mais de um)</span></label>
+                            <div id="caract-novo" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+                        </div>
                         <button class="btn-verde w-100" onclick="salvarJogador()" id="btn-jogador"><i class="bi bi-floppy me-1"></i> Salvar</button>
                     </div>
                 </div>
@@ -496,6 +509,10 @@
                         <label class="form-check-label" for="edit-fofoqueiro" style="font-size:13px"><i class="bi bi-bell me-1" style="color:var(--verde)"></i> Receber email de todos os jogos</label>
                     </div>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Meu estilo no court</label>
+                    <div id="caract-edit" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+                </div>
                 <div>
                     <label class="form-label">Foto</label>
                     <div class="foto-wrap">
@@ -509,6 +526,19 @@
                 <button type="button" class="btn-verde-sm" onclick="confirmarEditJogador()"><i class="bi bi-floppy me-1"></i>Salvar</button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Toast pos-partida -->
+<div id="toast-partida">
+    <div class="d-flex align-items-start gap-3">
+        <div style="font-size:26px" id="toast-emoji">🏆</div>
+        <div style="flex:1">
+            <div style="font-weight:700;font-size:13px;color:var(--verde);margin-bottom:4px" id="toast-titulo">Partida registrada!</div>
+            <div style="font-size:13px;color:var(--text);line-height:1.5" id="toast-msg">Analisando o resultado...</div>
+            <div class="toast-progress"><div class="toast-bar" id="toast-bar" style="width:100%"></div></div>
+        </div>
+        <button onclick="fecharToast()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;padding:0">×</button>
     </div>
 </div>
 
@@ -533,6 +563,65 @@
 let jogadores = [];
 const modalEditJogador = new bootstrap.Modal(document.getElementById('modalEditJogador'));
 const modalDelPartida  = new bootstrap.Modal(document.getElementById('modalDelPartida'));
+
+// =============================================
+// Características sarcásticas
+// =============================================
+const CARACT = [
+    {id:'slice',     emoji:'🎯', label:'Só dou slice'},
+    {id:'baloeiro',  emoji:'🎈', label:'Sou baloeiro'},
+    {id:'catimba',   emoji:'😈', label:'Gosto de catimba'},
+    {id:'sol_vento', emoji:'☀️', label:'A culpa é do sol/vento'},
+    {id:'reclama',   emoji:'😤', label:'Reclamo de tudo'},
+    {id:'conta',     emoji:'🤔', label:'Conto games errado'},
+    {id:'devagar',   emoji:'🐢', label:'Demoro entre pontos'},
+    {id:'wimbledon', emoji:'🏆', label:'Celebro como Wimbledon'},
+    {id:'out',       emoji:'👂', label:'Não ouço o out'},
+    {id:'raquete',   emoji:'🤬', label:'Quebraria a raquete'},
+    {id:'ace',       emoji:'💨', label:'Especialista em dupla falta'},
+];
+
+function renderCaract(containerId, selecionadas = []) {
+    document.getElementById(containerId).innerHTML = CARACT.map(c => {
+        const ativo = selecionadas.includes(c.id);
+        return `<label style="cursor:pointer">
+            <input type="checkbox" name="${containerId}-c" value="${c.id}" ${ativo?'checked':''} style="display:none">
+            <span class="badge-caract" style="${ativo?'background:rgba(196,120,80,0.3);border-color:var(--verde)':''}"
+                  onclick="toggleCaract(this)">${c.emoji} ${c.label}</span>
+        </label>`;
+    }).join('');
+}
+
+function toggleCaract(span) {
+    const cb = span.previousElementSibling;
+    cb.checked = !cb.checked;
+    span.style.background = cb.checked ? 'rgba(196,120,80,0.3)' : 'rgba(196,120,80,0.12)';
+    span.style.borderColor = cb.checked ? 'var(--verde)' : 'rgba(196,120,80,0.3)';
+}
+
+function getCaract(containerId) {
+    return [...document.querySelectorAll(`input[name="${containerId}-c"]:checked`)].map(c => c.value);
+}
+
+// =============================================
+// Toast pós-partida
+// =============================================
+let _toastTimer = null;
+function mostrarToast(titulo, msg, segundos) {
+    clearTimeout(_toastTimer);
+    document.getElementById('toast-titulo').textContent = titulo;
+    document.getElementById('toast-msg').textContent = msg;
+    const bar = document.getElementById('toast-bar');
+    const toast = document.getElementById('toast-partida');
+    toast.style.display = 'block';
+    bar.style.transition = 'none'; bar.style.width = '100%';
+    setTimeout(() => { bar.style.transition = `width ${segundos}s linear`; bar.style.width = '0%'; }, 50);
+    _toastTimer = setTimeout(fecharToast, segundos * 1000);
+}
+function fecharToast() {
+    clearTimeout(_toastTimer);
+    document.getElementById('toast-partida').style.display = 'none';
+}
 
 const isWebView = /wv|WebView/.test(navigator.userAgent) || (window.Android !== undefined);
 if ('serviceWorker' in navigator && !isWebView) navigator.serviceWorker.register('sw.js');
@@ -661,7 +750,7 @@ function previewFotoEdit(input) {
 // Jogadores
 // =============================================
 async function carregarJogadores() {
-    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,criado_em&order=nome.asc') || [];
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,criado_em,caracteristicas&order=nome.asc') || [];
     const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
 
     const stats = {};
@@ -680,13 +769,19 @@ async function carregarJogadores() {
     tb.innerHTML = jogadores.map(j => {
         const ehMeu = j.user_id === meuId;
         const botoes = ehMeu ? `
-            <button class="btn-act edit" onclick="abrirEditJogador(${j.id},'${j.nome.replace(/'/g,"\\'")}','${j.foto_url||''}','${j.sexo||'M'}',${!!j.fofoqueiro})"><i class="bi bi-pencil"></i></button>
+            <button class="btn-act edit" onclick="abrirEditJogador(${j.id})"><i class="bi bi-pencil"></i></button>
             <button class="btn-act del"  onclick="deletarJogador(${j.id})"><i class="bi bi-trash"></i></button>
         ` : '';
         const sexoIcon = j.sexo === 'F' ? '<i class="bi bi-gender-female" style="color:#f472b6;font-size:11px" title="Feminino"></i>' : '<i class="bi bi-gender-male" style="color:#60a5fa;font-size:11px" title="Masculino"></i>';
         const fofoIcon = j.fofoqueiro ? '<i class="bi bi-bell-fill" style="color:var(--verde);font-size:11px" title="Recebe todos os emails"></i>' : '';
+        const caractBadges = (j.caracteristicas||[]).map(id => {
+            const c = CARACT.find(x => x.id === id);
+            return c ? `<span class="badge-caract">${c.emoji} ${c.label}</span>` : '';
+        }).join(' ');
         return `<tr>
-            <td><div class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} ${j.nome} ${sexoIcon} ${fofoIcon}</div></td>
+            <td>
+                <div class="d-flex align-items-center gap-2">${avatarHtml(j.nome, j.foto_url)} <div><div>${j.nome} ${sexoIcon} ${fofoIcon}</div>${caractBadges?`<div style="margin-top:3px">${caractBadges}</div>`:''}</div></div>
+            </td>
             <td style="color:var(--muted);font-size:12px">${fmtData(j.criado_em)}</td>
             <td><span class="badge-v">${stats[j.id]?.v||0}V</span></td>
             <td><span class="badge-d">${stats[j.id]?.d||0}D</span></td>
@@ -707,29 +802,34 @@ async function salvarJogador() {
 
         const sexo = document.querySelector('input[name="sexo"]:checked')?.value || 'M';
         const fofoqueiro = document.getElementById('fofoqueiro').checked;
+        const caracteristicas = getCaract('caract-novo');
         let foto_url = null;
         const file = document.getElementById('foto-input').files[0];
         if (file) foto_url = await uploadFoto(file, nome);
-        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, sexo, fofoqueiro, foto_url }) });
+        await supaFetch('jogadores', { method: 'POST', prefer: 'return=minimal', body: JSON.stringify({ nome, sexo, fofoqueiro, foto_url, caracteristicas }) });
         document.getElementById('txtJogador').value = '';
         document.getElementById('foto-input').value = '';
         document.getElementById('foto-preview').style.display = 'none';
         document.getElementById('fofoqueiro').checked = false;
         document.getElementById('sexo-m').checked = true;
+        renderCaract('caract-novo');
         alerta('ok', 'Jogador cadastrado!');
         carregarJogadores();
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Salvar'; }
 }
 
-function abrirEditJogador(id, nome, fotoUrl, sexo, fofoqueiro) {
+function abrirEditJogador(id) {
+    const j = jogadores.find(x => x.id === id);
+    if (!j) return;
     document.getElementById('edit-jogador-id').value   = id;
-    document.getElementById('edit-jogador-nome').value = nome;
-    document.getElementById('edit-sexo-m').checked = (sexo !== 'F');
-    document.getElementById('edit-sexo-f').checked = (sexo === 'F');
-    document.getElementById('edit-fofoqueiro').checked = !!fofoqueiro;
+    document.getElementById('edit-jogador-nome').value = j.nome;
+    document.getElementById('edit-sexo-m').checked = (j.sexo !== 'F');
+    document.getElementById('edit-sexo-f').checked = (j.sexo === 'F');
+    document.getElementById('edit-fofoqueiro').checked = !!j.fofoqueiro;
     const prev = document.getElementById('edit-foto-preview');
-    if (fotoUrl) { prev.src = fotoUrl; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+    if (j.foto_url) { prev.src = j.foto_url; prev.style.display = 'block'; } else { prev.style.display = 'none'; }
+    renderCaract('caract-edit', j.caracteristicas || []);
     modalEditJogador.show();
 }
 
@@ -739,7 +839,8 @@ async function confirmarEditJogador() {
     if (!nome) { alerta('erro', 'Informe o nome.'); return; }
     const sexo = document.querySelector('input[name="edit-sexo"]:checked')?.value || 'M';
     const fofoqueiro = document.getElementById('edit-fofoqueiro').checked;
-    let dados = { nome, sexo, fofoqueiro };
+    const caracteristicas = getCaract('caract-edit');
+    let dados = { nome, sexo, fofoqueiro, caracteristicas };
     const file = document.getElementById('edit-foto-input').files[0];
     if (file) dados.foto_url = await uploadFoto(file, nome);
     await supaFetch(`jogadores?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify(dados) });
@@ -862,6 +963,14 @@ async function registrarPartida() {
 
         alerta('ok', `Partida registrada! Vencedor: ${vencedorNome}`);
         carregarHistorico();
+
+        // Toast com comentário Gemini
+        mostrarToast('Partida registrada! 🏆', 'A IA está analisando o resultado...', 10);
+        const promptToast = `Você é um comentarista de tênis extremamente sarcástico e engraçado. Comente em 1-2 frases curtas e criativas em português brasileiro: partida de ${tipo==='simples'?'simples':'duplas'}, ${nomesLado1} ${placarStr} ${nomesLado2}, venceu ${vencedorNome}. Use humor, seja ácido mas divertido.`;
+        geminiCall(promptToast).then(txt => {
+            if (txt) document.getElementById('toast-msg').textContent = txt;
+            else document.getElementById('toast-msg').textContent = `${vencedorNome} venceu! Parabéns! 🎉`;
+        });
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trophy me-1"></i> Registrar Partida'; }
 }
@@ -1104,8 +1213,9 @@ async function carregarDashboard() {
 // Init
 // =============================================
 (async () => {
-    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id&order=nome.asc') || [];
+    jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,caracteristicas&order=nome.asc') || [];
     carregarDashboard();
+    renderCaract('caract-novo');
 })();
 </script>
 </body>

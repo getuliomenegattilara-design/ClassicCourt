@@ -45,6 +45,23 @@ async function logApp(origem, mensagem, dados = {}) {
     } catch(e) {}
 }
 
+// =============================================
+// Gemini AI
+// =============================================
+const GEMINI_KEY = 'AIzaSyDSpDzJPyqXfNaFGwrux38o2m0TZUND7KI';
+
+async function geminiCall(prompt) {
+    try {
+        const res = await fetch(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + GEMINI_KEY,
+            { method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) }
+        );
+        const d = await res.json();
+        return d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    } catch(e) { return ''; }
+}
+
 async function supaCount(path) {
     const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
         headers: {
