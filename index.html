@@ -195,7 +195,7 @@
                 </div>
             </div>
         </div>
-        <div class="row g-3">
+        <div class="row g-3 mb-3">
             <div class="col-md-7">
                 <div class="section-card">
                     <div class="section-top">
@@ -221,6 +221,26 @@
                             <tbody id="tb-top"><tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Carregando...</td></tr></tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MVP + Sequência + Mural -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="section-card mb-3">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box">⭐</div><h6>MVP da Semana</h6></div></div>
+                    <div id="mvp-content" class="p-3" style="min-height:80px"></div>
+                </div>
+                <div class="section-card">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box">🔥</div><h6>Em Sequência</h6></div></div>
+                    <div id="streak-content" class="p-3" style="min-height:80px"></div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="section-card">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-activity"></i></div><h6>Mural de Atividades</h6></div></div>
+                    <div id="mural-content" style="max-height:280px;overflow-y:auto"></div>
                 </div>
             </div>
         </div>
@@ -1244,12 +1264,14 @@ async function carregarHistorico() {
         const fotoThumb = p.foto_url
             ? `<a href="${p.foto_url}" target="_blank"><img src="${p.foto_url}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;border:1px solid var(--border)"></a>`
             : '';
+        const txtWpp = encodeURIComponent(`🎾 *Classic Court*\n${lado1} x ${lado2}\nPlacar: ${placar}\nVencedor: *${venc}*\n\n_Classic Boulevard_`);
+        const btnWpp = `<a href="https://wa.me/?text=${txtWpp}" target="_blank" class="btn-act" style="color:#25D366" title="Compartilhar no WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
         return `<tr>
             <td style="color:var(--muted);font-size:12px">${fmtData(p.data_partida)}</td>
             <td style="font-size:12px">${lado1} x ${lado2}</td>
             <td style="font-size:12px;color:var(--verde)">${placar}</td>
             <td><span class="badge-v" style="font-size:11px">${venc}</span></td>
-            <td class="d-flex align-items-center gap-1">${fotoThumb}${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
+            <td class="d-flex align-items-center gap-1">${fotoThumb}${btnWpp}${podeExcluir ? `<button class="btn-act del" onclick="abrirDelPartida(${p.id})"><i class="bi bi-trash"></i></button>` : ''}</td>
         </tr>`;
     }).join('');
 }
@@ -1383,6 +1405,90 @@ async function carregarConfronto() {
 }
 
 // =============================================
+// Dashboard — destaques
+// =============================================
+function calcularMVP(partidas) {
+    const limite = new Date(); limite.setDate(limite.getDate() - 7);
+    const recentes = partidas.filter(p => new Date(p.data_partida) >= limite);
+    const vits = {};
+    recentes.forEach(p => {
+        const vIds = p.vencedor === 1
+            ? (p.tipo==='simples' ? [p.jogador1_id] : [p.dupla1_j1_id, p.dupla1_j2_id])
+            : (p.tipo==='simples' ? [p.jogador2_id] : [p.dupla2_j1_id, p.dupla2_j2_id]);
+        vIds.forEach(id => { if (id) vits[id] = (vits[id]||0)+1; });
+    });
+    const best = Object.entries(vits).sort((a,b) => b[1]-a[1])[0];
+    if (!best) return null;
+    return { jogador: jogadores.find(j => j.id == best[0]), vitorias: best[1] };
+}
+
+function calcularSequencias(partidas) {
+    const streaks = {};
+    jogadores.forEach(j => streaks[j.id] = 0);
+    [...partidas].sort((a,b) => new Date(a.data_partida)-new Date(b.data_partida)).forEach(p => {
+        const l1 = p.tipo==='simples'?[p.jogador1_id]:[p.dupla1_j1_id,p.dupla1_j2_id];
+        const l2 = p.tipo==='simples'?[p.jogador2_id]:[p.dupla2_j1_id,p.dupla2_j2_id];
+        (p.vencedor===1?l1:l2).forEach(id => { if(id&&streaks[id]!==undefined) streaks[id]++; });
+        (p.vencedor===1?l2:l1).forEach(id => { if(id&&streaks[id]!==undefined) streaks[id]=0; });
+    });
+    return Object.entries(streaks).filter(([,s])=>s>=2).sort((a,b)=>b[1]-a[1])
+        .map(([id,s]) => ({ jogador: jogadores.find(j=>j.id==id), streak: s })).filter(x=>x.jogador);
+}
+
+async function carregarMural(partidas, sets) {
+    const aulas = await supaFetch('aulas?select=id,data_aula,professor_id,comentario&order=data_aula.desc&limit=8').catch(()=>[]) || [];
+    const eventos = [
+        ...partidas.slice(0,8).map(p => {
+            const l1 = p.tipo==='simples'?nomePorId(p.jogador1_id):`${nomePorId(p.dupla1_j1_id)}/${nomePorId(p.dupla1_j2_id)}`;
+            const l2 = p.tipo==='simples'?nomePorId(p.jogador2_id):`${nomePorId(p.dupla2_j1_id)}/${nomePorId(p.dupla2_j2_id)}`;
+            const pl = sets.filter(s=>s.partida_id===p.id).map(s=>`${s.games_lado1}x${s.games_lado2}`).join(' ');
+            const venc = p.vencedor==1?l1:l2;
+            return { data: p.data_partida, icon:'🎾', txt:`${l1} x ${l2} &nbsp;${pl}&nbsp; — <strong>${venc}</strong> venceu` };
+        }),
+        ...aulas.map(a => ({
+            data: a.data_aula, icon:'📚',
+            txt:`Aula com <strong>${professores.find(p=>p.id===a.professor_id)?.nome||'professor'}</strong>${a.comentario?` — ${a.comentario.slice(0,50)}`:''}`
+        }))
+    ].sort((a,b)=>new Date(b.data)-new Date(a.data)).slice(0,12);
+
+    const el = document.getElementById('mural-content');
+    if (!eventos.length) { el.innerHTML='<div class="p-3" style="color:var(--muted);font-size:13px">Nenhuma atividade ainda.</div>'; return; }
+    el.innerHTML = eventos.map(e => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border)">
+            <span style="font-size:18px;flex-shrink:0">${e.icon}</span>
+            <div style="flex:1">
+                <div style="font-size:12px;color:var(--text)">${e.txt}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">${fmtData(e.data)}</div>
+            </div>
+        </div>`).join('');
+}
+
+function renderMVP(mvp) {
+    const el = document.getElementById('mvp-content');
+    if (!mvp || !mvp.jogador) { el.innerHTML='<div style="color:var(--muted);font-size:13px">Sem dados esta semana.</div>'; return; }
+    el.innerHTML = `<div class="d-flex align-items-center gap-3">
+        ${avatarHtml(mvp.jogador.nome, mvp.jogador.foto_url)}
+        <div>
+            <div style="font-weight:700;font-size:14px">${mvp.jogador.nome}</div>
+            <div style="font-size:12px;color:var(--verde)">${mvp.vitorias} vitória${mvp.vitorias>1?'s':''} nos últimos 7 dias ⭐</div>
+        </div>
+    </div>`;
+}
+
+function renderSequencias(seqs) {
+    const el = document.getElementById('streak-content');
+    if (!seqs.length) { el.innerHTML='<div style="color:var(--muted);font-size:13px">Nenhuma sequência ativa.</div>'; return; }
+    el.innerHTML = seqs.slice(0,3).map(s => `
+        <div class="d-flex align-items-center gap-2 mb-2">
+            ${avatarHtml(s.jogador.nome, s.jogador.foto_url)}
+            <div style="flex:1">
+                <span style="font-size:13px;font-weight:600">${s.jogador.nome.split(' ')[0]}</span>
+                <span style="font-size:12px;color:var(--verde);margin-left:6px">🔥 ${s.streak} seguidas</span>
+            </div>
+        </div>`).join('');
+}
+
+// =============================================
 // Dashboard
 // =============================================
 async function carregarDashboard() {
@@ -1425,8 +1531,8 @@ async function carregarDashboard() {
     });
     const top = Object.values(stats).sort((a,b)=>b.v-a.v||a.d-b.d).slice(0,5);
     const tb2 = document.getElementById('tb-top');
-    if (!top.length||top.every(t=>t.p===0)) { tb2.innerHTML='<tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Sem dados.</td></tr>'; return; }
-    tb2.innerHTML = top.map((r,i) => `
+    if (!top.length||top.every(t=>t.p===0)) { tb2.innerHTML='<tr><td colspan="5" class="text-center py-3" style="color:var(--muted)">Sem dados.</td></tr>'; }
+    else tb2.innerHTML = top.map((r,i) => `
         <tr>
             <td><span class="rank-num ${rankClass(i)}">${i+1}</span></td>
             <td class="d-flex align-items-center gap-1">${avatarHtml(r.nome,r.foto)} <span style="font-size:13px">${r.nome}</span></td>
@@ -1435,6 +1541,11 @@ async function carregarDashboard() {
             <td><strong style="color:${r.p>0&&r.v/r.p>=0.5?'var(--verde)':'#e74c3c'};font-size:13px">${r.p>0?Math.round(r.v/r.p*100):0}%</strong></td>
         </tr>
     `).join('');
+
+    // Destaques
+    renderMVP(calcularMVP(partidas));
+    renderSequencias(calcularSequencias(partidas));
+    carregarMural(partidas, sets);
 }
 
 // =============================================
