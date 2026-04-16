@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classic Court — Login</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#C47850">
+    <meta name="theme-color" content="#5B9BD5">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -15,14 +15,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
-            --verde: #C47850;
-            --verde-dark: #A85F38;
-            --bg: #0e0b08;
-            --surface: #1a1410;
-            --surface2: #251c16;
-            --text: #f0e8e0;
-            --muted: #a08870;
-            --border: #352518;
+            --verde: #5B9BD5;
+            --verde-dark: #3A7FCE;
+            --bg: #F5F7FA;
+            --surface: #FFFFFF;
+            --surface2: #EDF1F5;
+            --text: #2C3E50;
+            --muted: #7A8B9C;
+            --border: #DDE3E9;
         }
         * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -34,7 +34,7 @@
             padding: 40px 36px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 60px rgba(44,62,80,0.12);
         }
 
         .logo-wrap {
@@ -61,7 +61,7 @@
         }
         .form-control::placeholder { color: var(--muted) !important; }
         .form-control:focus {
-            box-shadow: 0 0 0 3px rgba(196,120,80,0.2) !important;
+            box-shadow: 0 0 0 3px rgba(91,155,213,0.2) !important;
             border-color: var(--verde) !important;
         }
         .input-group-text {
@@ -96,14 +96,14 @@
         }
         .tab-btn.active { color: var(--verde); border-bottom-color: var(--verde); }
 
-        .alert-ok  { background: rgba(196,120,80,0.1); border: 1px solid rgba(196,120,80,0.3); color: #6ee7b7; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
-        .alert-err { background: rgba(231,76,60,0.1);  border: 1px solid rgba(231,76,60,0.3);  color: #fca5a5; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+        .alert-ok  { background: rgba(91,155,213,0.1); border: 1px solid rgba(91,155,213,0.3); color: #2a7ab8; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
+        .alert-err { background: rgba(231,76,60,0.1);  border: 1px solid rgba(231,76,60,0.3);  color: #c0392b; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; }
 
         .link-btn { background: none; border: none; color: var(--verde); font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
 
         /* Overlay piada boas-vindas */
         #overlay-piada { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; align-items:center; justify-content:center; padding:20px; }
-        .piada-card { background:var(--surface); border:2px solid var(--verde); border-radius:22px; padding:36px 28px; max-width:380px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.6); animation: popIn 0.4s cubic-bezier(.17,.67,.32,1.3); }
+        .piada-card { background:var(--surface); border:2px solid var(--verde); border-radius:22px; padding:36px 28px; max-width:380px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(44,62,80,0.2); animation: popIn 0.4s cubic-bezier(.17,.67,.32,1.3); }
         @keyframes popIn { from { transform:scale(0.7); opacity:0; } to { transform:scale(1); opacity:1; } }
         .piada-emoji { font-size:52px; margin-bottom:12px; display:block; }
         .piada-texto { color:var(--text); font-size:14px; line-height:1.6; margin:12px 0 24px; min-height:60px; }
