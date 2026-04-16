@@ -433,6 +433,13 @@
                         </div>
                     </div>
                 </div>
+                <div id="evolucao-box" style="display:none" class="section-card mb-3">
+                    <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box">📈</div><h6>Sua Evolução — aproveitamento por mês</h6></div></div>
+                    <div class="p-3" style="position:relative;height:260px">
+                        <canvas id="grafico-evolucao"></canvas>
+                    </div>
+                </div>
+
                 <div class="section-card">
                     <div class="section-top"><div class="d-flex align-items-center gap-2"><div class="icon-box"><i class="bi bi-bar-chart"></i></div><h6>Ranking Geral — Classic Boulevard</h6></div></div>
                     <div class="table-responsive">
@@ -703,6 +710,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="config.js"></script>
 <script>
 
@@ -1572,6 +1580,82 @@ function analisarPerfilPessoal(partidas) {
 }
 
 // =============================================
+// Gráfico de evolução pessoal
+// =============================================
+let chartEvolucao = null;
+function renderEvolucao(partidas) {
+    const box = document.getElementById('evolucao-box');
+    if (!box) return;
+    const meu = jogadores.find(j => j.user_id === getUserId());
+    if (!meu) { box.style.display = 'none'; return; }
+
+    // Agrupa por mês (YYYY-MM)
+    const porMes = {}; // mes => { v, total }
+    partidas.forEach(p => {
+        const l1 = p.tipo === 'simples' ? [p.jogador1_id] : [p.dupla1_j1_id, p.dupla1_j2_id];
+        const l2 = p.tipo === 'simples' ? [p.jogador2_id] : [p.dupla2_j1_id, p.dupla2_j2_id];
+        const meuLado = l1.includes(meu.id) ? 1 : (l2.includes(meu.id) ? 2 : 0);
+        if (!meuLado) return;
+        const dt = new Date(p.data_partida);
+        const mes = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+        if (!porMes[mes]) porMes[mes] = { v: 0, total: 0 };
+        porMes[mes].total++;
+        if (p.vencedor == meuLado) porMes[mes].v++;
+    });
+
+    const labels = Object.keys(porMes).sort();
+    if (!labels.length) { box.style.display = 'none'; return; }
+
+    const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const labelsFmt = labels.map(m => {
+        const [ano, mes] = m.split('-');
+        return `${MESES_PT[parseInt(mes)-1]}/${ano.slice(2)}`;
+    });
+    const pcts = labels.map(m => Math.round(porMes[m].v / porMes[m].total * 100));
+    const partidasMes = labels.map(m => porMes[m].total);
+
+    box.style.display = '';
+    if (chartEvolucao) chartEvolucao.destroy();
+    const ctx = document.getElementById('grafico-evolucao').getContext('2d');
+    chartEvolucao = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labelsFmt,
+            datasets: [{
+                label: 'Aproveitamento %',
+                data: pcts,
+                borderColor: '#C47850',
+                backgroundColor: 'rgba(196,120,80,0.15)',
+                fill: true,
+                tension: 0.3,
+                pointBackgroundColor: '#C47850',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const i = ctx.dataIndex;
+                            return `${pcts[i]}% (${porMes[labels[i]].v}V em ${partidasMes[i]})`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { color: '#a08870', callback: (v) => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                x: { ticks: { color: '#a08870' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+        }
+    });
+}
+
+// =============================================
 // Ranking Sarcástico
 // =============================================
 async function renderRankingSarcastico(partidas) {
@@ -1633,11 +1717,12 @@ async function renderRankingSarcastico(partidas) {
 // =============================================
 async function carregarRanking() {
     if (!jogadores.length) jogadores = await supaFetch('jogadores?select=id,nome,foto_url,email,sexo,fofoqueiro,user_id,professor&order=nome.asc') || [];
-    const partidas = await supaFetch('partidas?select=id,tipo,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor') || [];
+    const partidas = await supaFetch('partidas?select=id,tipo,data_partida,jogador1_id,jogador2_id,dupla1_j1_id,dupla1_j2_id,dupla2_j1_id,dupla2_j2_id,vencedor&order=data_partida.asc') || [];
     const sets     = await supaFetch('sets?select=partida_id,games_lado1,games_lado2') || [];
 
     analisarPerfilPessoal(partidas);
     renderRankingSarcastico(partidas);
+    renderEvolucao(partidas);
 
     const stats = {};
     jogadores.forEach(j => stats[j.id] = { nome: j.nome, foto: j.foto_url, p: 0, v: 0, d: 0, sv: 0, sd: 0 });
