@@ -1722,10 +1722,16 @@ async function preverPartida() {
         return labels.length ? `${j.nome.split(' ')[0]}: ${labels.join(', ')}` : null;
     }).filter(Boolean).join(' | ');
 
+    const profInfo = allIds.map(id => {
+        const j = jogadores.find(x => x.id == id);
+        return j?.professor ? `${j.nome.split(' ')[0]} é professor de tênis profissional` : null;
+    }).filter(Boolean).join('; ');
+
     const prompt = `Você é o "Oráculo da Quadra" do condomínio Classic Boulevard em BH — especialista em previsões absolutamente ridículas mas engraçadas.
 Partida de ${tipo === 'simples' ? 'simples' : 'duplas'}: ${nomes[0]} vs ${nomes[1]}
 ${caractInfo ? `Estilos: ${caractInfo}` : ''}
-Faça uma previsão cômica em 3 frases: a primeira "prevendo" quem vence e por quê (mencione o estilo de jogo), a segunda descrevendo o momento mais dramático da partida de forma absurda, a terceira um conselho inútil ao futuro perdedor. Seja engraçado e específico. PROIBIDO: "vai ser uma boa partida", frases genéricas. Retorne só o texto.`;
+${profInfo ? `Contexto importante: ${profInfo}.` : ''}
+Faça uma previsão cômica em 3 frases: a primeira "prevendo" quem vence e por quê (mencione o estilo de jogo${profInfo ? ' e a vantagem do professor' : ''}), a segunda descrevendo o momento mais dramático da partida de forma absurda, a terceira um conselho inútil ao futuro perdedor. Seja engraçado e específico. PROIBIDO: "vai ser uma boa partida", frases genéricas. Retorne só o texto.`;
 
     try {
         const txt = await geminiCall(prompt);
