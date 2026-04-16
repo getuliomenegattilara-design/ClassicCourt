@@ -870,6 +870,20 @@ async function registrarAula() {
 
         alerta('ok', 'Aula registrada!');
         carregarAulas();
+
+        // Toast Gemini comentando a aula
+        const profNome = professores.find(p => p.id == profId)?.nome || 'o professor';
+        const alunosNomes = ids.map(id => jogadores.find(j => j.id == id)?.nome?.split(' ')[0] || '?').join(', ');
+        mostrarToast('Aula registrada! 📚', 'A IA está avaliando o desempenho...', 12);
+        const promptAula = `Você é um comentarista esportivo sarcástico e engraçado de um condomínio de luxo em BH.
+Uma aula de tênis acabou de acontecer:
+- Professor: ${profNome}
+- Alunos: ${alunosNomes}
+${comentario ? `- Observação: ${comentario}` : ''}
+Faça um comentário hilário de 2 frases em português brasileiro informal: a primeira zoando carinhosamente os alunos, a segunda elogiando o professor de forma exagerada. PROIBIDO: "ótima aula", "parabéns", frases genéricas. Retorne só o texto, sem aspas.`;
+        geminiCall(promptAula).then(txt => {
+            document.getElementById('toast-msg').textContent = txt || `${alunosNomes} suaram muito hoje! ${profNome} arrasou na quadra! 🎾`;
+        });
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Registrar Aula'; }
 }
