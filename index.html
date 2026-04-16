@@ -307,7 +307,7 @@
                             <label class="form-label">Foto da Partida <span style="color:var(--muted);font-size:10px">(opcional)</span></label>
                             <div class="foto-wrap">
                                 <img id="partida-foto-preview" class="foto-preview" src="">
-                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Adicionar foto<input type="file" id="partida-foto-input" accept="image/*" style="display:none" onchange="previewFotoPartida(this)"></label>
+                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Adicionar foto<input type="file" id="partida-foto-input" accept="image/*" capture="environment" style="display:none" onchange="previewFotoPartida(this)"></label>
                             </div>
                         </div>
                         <button class="btn-verde w-100" onclick="registrarPartida()" id="btn-registrar"><i class="bi bi-trophy me-1"></i> Registrar Partida</button>
@@ -363,7 +363,7 @@
                             <label class="form-label">Foto</label>
                             <div class="foto-wrap">
                                 <img id="foto-preview" class="foto-preview" src="">
-                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Escolher foto<input type="file" id="foto-input" accept="image/*" style="display:none" onchange="previewFoto(this)"></label>
+                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Escolher foto<input type="file" id="foto-input" accept="image/*" capture="user" style="display:none" onchange="previewFoto(this)"></label>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -576,7 +576,7 @@
                             <label class="form-label">Foto <span style="color:var(--muted);font-size:10px">(opcional)</span></label>
                             <div class="foto-wrap">
                                 <img id="aula-foto-preview" class="foto-preview" src="">
-                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Adicionar foto<input type="file" id="aula-foto-input" accept="image/*" style="display:none" onchange="previewFotoAula(this)"></label>
+                                <label class="btn-upload"><i class="bi bi-camera me-1"></i> Adicionar foto<input type="file" id="aula-foto-input" accept="image/*" capture="environment" style="display:none" onchange="previewFotoAula(this)"></label>
                             </div>
                         </div>
                         <button class="btn-verde w-100" onclick="registrarAula()" id="btn-aula"><i class="bi bi-floppy me-1"></i> Registrar Aula</button>
@@ -671,7 +671,7 @@
                     <label class="form-label">Foto</label>
                     <div class="foto-wrap">
                         <img id="edit-foto-preview" class="foto-preview" src="">
-                        <label class="btn-upload"><i class="bi bi-camera me-1"></i> Alterar foto<input type="file" id="edit-foto-input" accept="image/*" style="display:none" onchange="previewFotoEdit(this)"></label>
+                        <label class="btn-upload"><i class="bi bi-camera me-1"></i> Alterar foto<input type="file" id="edit-foto-input" accept="image/*" capture="user" style="display:none" onchange="previewFotoEdit(this)"></label>
                     </div>
                 </div>
             </div>
