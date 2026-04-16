@@ -224,6 +224,10 @@
 // Log de abertura
 logApp('login', 'App aberto', { ua: navigator.userAgent, url: location.href });
 
+// Exibe mensagem de sessão expirada se vier redirecionado
+const msgLogin = localStorage.getItem('cc_msg_login');
+if (msgLogin) { alerta('erro', msgLogin); localStorage.removeItem('cc_msg_login'); }
+
 // Verifica se ja esta logado
 const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
 if (session && session.access_token) {

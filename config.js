@@ -14,7 +14,30 @@ function getUserId() {
     return session?.user?.id || null;
 }
 
+function sessaoExpirada() {
+    const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
+    if (!session?.access_token) return true;
+    try {
+        const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+        return payload.exp * 1000 < Date.now();
+    } catch(e) { return true; }
+}
+
+function expirarSessao() {
+    localStorage.removeItem('cc_session');
+    localStorage.setItem('cc_msg_login', 'Sua sessão expirou. Faça login novamente.');
+    window.location.href = 'login.html';
+}
+
+// Verifica expiração ao voltar para a aba
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && window.location.pathname !== '/login.html') {
+        if (sessaoExpirada()) expirarSessao();
+    }
+});
+
 async function supaFetch(path, options = {}) {
+    if (sessaoExpirada()) { expirarSessao(); return; }
     const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
         ...options,
         headers: {
@@ -25,6 +48,7 @@ async function supaFetch(path, options = {}) {
             ...(options.headers || {})
         }
     });
+    if (res.status === 401) { expirarSessao(); return; }
     const text = await res.text();
     if (!text) return null;
     const data = JSON.parse(text);
