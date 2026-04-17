@@ -677,9 +677,34 @@
                     </div>
                 </div>
             </div>
+            <div class="modal-footer" style="justify-content:space-between">
+                <button type="button" class="btn btn-sm" style="color:#DC2626;font-size:12px" onclick="modalEditJogador.hide();modalExcluirConta.show()"><i class="bi bi-trash me-1"></i>Excluir minha conta</button>
+                <div>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-verde-sm" onclick="confirmarEditJogador()"><i class="bi bi-floppy me-1"></i>Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Excluir Conta -->
+<div class="modal fade" id="modalExcluirConta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Excluir Conta</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body p-3">
+                <p style="font-size:13px;color:var(--text);margin-bottom:12px">Tem certeza que deseja excluir sua conta? Esta ação:</p>
+                <ul style="font-size:12px;color:var(--muted);margin-bottom:16px">
+                    <li>Remove seus dados pessoais (nome, email, foto)</li>
+                    <li>Suas partidas e aulas ficam no histórico como "Usuário Excluído"</li>
+                    <li>Você será desconectado e não poderá mais acessar</li>
+                </ul>
+                <p style="font-size:13px;color:#DC2626;font-weight:700">Esta ação não pode ser desfeita.</p>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn-verde-sm" onclick="confirmarEditJogador()"><i class="bi bi-floppy me-1"></i>Salvar</button>
+                <button type="button" class="btn btn-danger btn-sm" onclick="excluirMinhaConta()"><i class="bi bi-trash me-1"></i>Excluir definitivamente</button>
             </div>
         </div>
     </div>
@@ -719,6 +744,7 @@
 
 let jogadores = [];
 const modalEditJogador = new bootstrap.Modal(document.getElementById('modalEditJogador'));
+const modalExcluirConta = new bootstrap.Modal(document.getElementById('modalExcluirConta'));
 const modalDelPartida  = new bootstrap.Modal(document.getElementById('modalDelPartida'));
 
 // =============================================
@@ -1324,6 +1350,32 @@ async function salvarJogador() {
         carregarJogadores();
     } catch(e) { alerta('erro', 'Erro: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="bi bi-floppy me-1"></i> Salvar'; }
+}
+
+async function excluirMinhaConta() {
+    const meu = jogadores.find(j => j.user_id === getUserId());
+    if (!meu) { alerta('erro', 'Jogador não encontrado.'); return; }
+    try {
+        // Anonimiza dados pessoais
+        await supaFetch(`jogadores?id=eq.${meu.id}`, {
+            method: 'PATCH', prefer: 'return=minimal',
+            body: JSON.stringify({
+                nome: 'Usuario Excluido',
+                email: null,
+                foto_url: null,
+                apelido: null,
+                caracteristicas: null,
+                fofoqueiro: false,
+                user_id: null
+            })
+        });
+        logApp('conta', 'Conta excluida', { jogador_id: meu.id });
+        modalExcluirConta.hide();
+        localStorage.removeItem('cc_session');
+        window.location.href = 'login.html';
+    } catch(e) {
+        alerta('erro', 'Erro ao excluir: ' + e.message);
+    }
 }
 
 function abrirEditJogador(id) {
