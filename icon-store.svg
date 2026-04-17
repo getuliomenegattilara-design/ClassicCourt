@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <radialGradient id="ball" cx="42%" cy="38%" r="60%">
+      <stop offset="0%" stop-color="#E8F766"/>
+      <stop offset="70%" stop-color="#CBE338"/>
+      <stop offset="100%" stop-color="#9BB217"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Fundo azul -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Quadra estilizada sutil -->
+  <g opacity="0.18" stroke="#FFFFFF" fill="none" stroke-width="6">
+    <rect x="160" y="280" width="704" height="464" rx="8"/>
+    <line x1="512" y1="280" x2="512" y2="744"/>
+    <line x1="160" y1="512" x2="864" y2="512"/>
+    <line x1="160" y1="396" x2="864" y2="396"/>
+    <line x1="160" y1="628" x2="864" y2="628"/>
+  </g>
+
+  <!-- Bola de tenis -->
+  <g>
+    <!-- Sombra -->
+    <ellipse cx="512" cy="820" rx="180" ry="28" fill="#000000" opacity="0.25"/>
+    <!-- Corpo da bola -->
+    <circle cx="512" cy="512" r="220" fill="url(#ball)"/>
+    <!-- Curvas caracteristicas -->
+    <path d="M 332 450 Q 512 370 692 450" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
+    <path d="M 332 574 Q 512 654 692 574" fill="none" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
+    <!-- Brilho -->
+    <ellipse cx="436" cy="430" rx="58" ry="40" fill="#FFFFFF" opacity="0.35"/>
+  </g>
+</svg>
