@@ -1845,16 +1845,18 @@ async function renderRankingSarcastico(partidas) {
     const jogaram = arr.filter(s => s.p >= 1);
     const fantasma = jogaram.length ? [...jogaram].sort((a,b) => a.p - b.p)[0] : null;
     const teorico = [...arr].filter(s => s.aulas >= 3).sort((a,b) => (b.aulas - b.p*2) - (a.aulas - a.p*2))[0];
-    const reiDuplas = [...arr].sort((a,b) => b.vDup - a.vDup)[0];
-    const reiSimp = [...arr].sort((a,b) => b.vSimp - a.vSimp)[0];
+    const _reiDup = [...arr].filter(s => s.vDup > 0).sort((a,b) => b.vDup - a.vDup);
+    const reiDuplas = _reiDup.length && (_reiDup.length === 1 || _reiDup[0].vDup > _reiDup[1].vDup) ? _reiDup[0] : null;
+    const _reiSim = [...arr].filter(s => s.vSimp > 0).sort((a,b) => b.vSimp - a.vSimp);
+    const reiSimp = _reiSim.length && (_reiSim.length === 1 || _reiSim[0].vSimp > _reiSim[1].vSimp) ? _reiSim[0] : null;
 
     const cards = [
         { emoji: '💀', titulo: 'O Eterno Vice', jog: eternoVice, info: eternoVice ? `${eternoVice.d} derrotas` : '', cor: '#e74c3c' },
         { emoji: '🎯', titulo: 'Dupla Falta',   jog: duplaFalta, info: duplaFalta ? `${Math.round(duplaFalta.v/duplaFalta.p*100)}% aproveit.` : '', cor: '#e67e22' },
         { emoji: '👻', titulo: 'O Fantasma',    jog: fantasma, info: fantasma ? `só ${fantasma.p} partida${fantasma.p>1?'s':''}` : '', cor: '#95a5a6' },
         { emoji: '📚', titulo: 'O Teórico',     jog: teorico, info: teorico ? `${teorico.aulas} aulas x ${teorico.p} partidas` : '', cor: '#3498db' },
-        { emoji: '🎾', titulo: 'Rei das Duplas', jog: reiDuplas && reiDuplas.vDup > 0 ? reiDuplas : null, info: reiDuplas && reiDuplas.vDup > 0 ? `${reiDuplas.vDup} V em duplas` : '', cor: 'var(--verde)' },
-        { emoji: '🤝', titulo: 'Rei dos Singles', jog: reiSimp && reiSimp.vSimp > 0 ? reiSimp : null, info: reiSimp && reiSimp.vSimp > 0 ? `${reiSimp.vSimp} V em simples` : '', cor: 'var(--verde)' },
+        { emoji: '🎾', titulo: 'Rei das Duplas', jog: reiDuplas, info: reiDuplas ? `${reiDuplas.vDup} V em duplas` : '', cor: 'var(--verde)' },
+        { emoji: '🤝', titulo: 'Rei dos Singles', jog: reiSimp, info: reiSimp ? `${reiSimp.vSimp} V em simples` : '', cor: 'var(--verde)' },
     ];
 
     box.innerHTML = cards.map(c => `
