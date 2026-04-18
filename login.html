@@ -497,7 +497,7 @@ async function recuperarSenha() {
         await fetch(`${SUPA_URL}/auth/v1/recover`, {
             method: 'POST',
             headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
+            body: JSON.stringify({ email, redirectTo: 'https://getuliomenegattilara-design.github.io/ClassicCourt/login.html' })
         });
         alerta('ok', 'Link enviado! Verifique seu e-mail.');
     } catch(e) {
