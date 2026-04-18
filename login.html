@@ -415,18 +415,18 @@ async function fazerCadastro() {
     }
 }
 
-// Detecta token de reset na URL (Supabase redireciona com hash)
-let _resetToken = null;
+// Detecta token de reset na URL (query string ou hash)
+let _resetTokenHash = null;
 (function() {
-    const hash = window.location.hash;
-    if (hash) {
-        const params = new URLSearchParams(hash.substring(1));
-        const access_token = params.get('access_token');
-        const type = params.get('type');
-        if (access_token && type === 'recovery') {
-            _resetToken = access_token;
-            mostrarTab('redefinir');
-        }
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+    if (params.get('type') === 'recovery' && params.get('token_hash')) {
+        _resetTokenHash = params.get('token_hash');
+        mostrarTab('redefinir');
+    } else if (hashParams.get('type') === 'recovery' && hashParams.get('access_token')) {
+        _resetTokenHash = hashParams.get('access_token');
+        mostrarTab('redefinir');
     }
 })();
 
@@ -438,15 +438,29 @@ async function redefinirSenha() {
     const btn = document.getElementById('btn-redefinir');
     btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
     try {
+        // Primeiro verifica o token pra obter session
+        const verifyRes = await fetch(SUPA_URL + '/auth/v1/verify', {
+            method: 'POST',
+            headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'recovery', token_hash: _resetTokenHash })
+        });
+        if (!verifyRes.ok) {
+            const err = await verifyRes.json();
+            alerta('erro', err.error_description || err.msg || 'Link expirado. Solicite novo.');
+            return;
+        }
+        const session = await verifyRes.json();
+        const accessToken = session.access_token;
+
+        // Atualiza a senha
         const res = await fetch(SUPA_URL + '/auth/v1/user', {
             method: 'PUT',
-            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _resetToken, 'Content-Type': 'application/json' },
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: nova })
         });
         if (res.ok) {
             alerta('ok', 'Senha alterada com sucesso! Faca login com a nova senha.');
-            window.location.hash = '';
-            setTimeout(() => mostrarTab('login'), 2000);
+            setTimeout(() => { window.location.href = 'login.html'; }, 2000);
         } else {
             const err = await res.json();
             alerta('erro', err.error_description || err.msg || 'Erro ao alterar senha.');
