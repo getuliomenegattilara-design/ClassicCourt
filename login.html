@@ -222,6 +222,28 @@
         </div>
     </div>
 
+    <!-- REDEFINIR SENHA -->
+    <div id="tab-redefinir" style="display:none">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Digite sua nova senha.</p>
+        <div class="mb-3">
+            <label class="form-label">Nova senha</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="nova-senha" placeholder="Minimo 6 caracteres">
+            </div>
+        </div>
+        <div class="mb-4">
+            <label class="form-label">Confirmar senha</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                <input type="password" class="form-control" id="confirma-senha" placeholder="Repita a senha">
+            </div>
+        </div>
+        <button class="btn-verde" onclick="redefinirSenha()" id="btn-redefinir">
+            <i class="bi bi-check-circle me-2"></i> Salvar nova senha
+        </button>
+    </div>
+
 </div>
 
 <!-- Overlay piada boas-vindas -->
@@ -290,11 +312,12 @@ function mostrarTab(tab) {
     document.getElementById('tab-login').style.display     = 'none';
     document.getElementById('tab-cadastro').style.display  = 'none';
     document.getElementById('tab-recuperar').style.display = 'none';
+    document.getElementById('tab-redefinir').style.display = 'none';
     document.getElementById('tab-login-btn').classList.remove('active');
     document.getElementById('tab-cadastro-btn').classList.remove('active');
 
     document.getElementById('tab-' + tab).style.display = '';
-    if (tab === 'login' || tab === 'recuperar') document.getElementById('tab-login-btn').classList.add('active');
+    if (tab === 'login' || tab === 'recuperar' || tab === 'redefinir') document.getElementById('tab-login-btn').classList.add('active');
     if (tab === 'cadastro') document.getElementById('tab-cadastro-btn').classList.add('active');
     document.getElementById('alerta').style.display = 'none';
 }
@@ -389,6 +412,49 @@ async function fazerCadastro() {
         alerta('erro', e.message);
     } finally {
         btn.disabled = false; btn.innerHTML = '<i class="bi bi-person-plus me-2"></i> Criar conta';
+    }
+}
+
+// Detecta token de reset na URL (Supabase redireciona com hash)
+let _resetToken = null;
+(function() {
+    const hash = window.location.hash;
+    if (hash) {
+        const params = new URLSearchParams(hash.substring(1));
+        const access_token = params.get('access_token');
+        const type = params.get('type');
+        if (access_token && type === 'recovery') {
+            _resetToken = access_token;
+            mostrarTab('redefinir');
+        }
+    }
+})();
+
+async function redefinirSenha() {
+    const nova = document.getElementById('nova-senha').value;
+    const confirma = document.getElementById('confirma-senha').value;
+    if (nova.length < 6) { alerta('erro', 'Senha deve ter pelo menos 6 caracteres.'); return; }
+    if (nova !== confirma) { alerta('erro', 'As senhas nao conferem.'); return; }
+    const btn = document.getElementById('btn-redefinir');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvando...';
+    try {
+        const res = await fetch(SUPA_URL + '/auth/v1/user', {
+            method: 'PUT',
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + _resetToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: nova })
+        });
+        if (res.ok) {
+            alerta('ok', 'Senha alterada com sucesso! Faca login com a nova senha.');
+            window.location.hash = '';
+            setTimeout(() => mostrarTab('login'), 2000);
+        } else {
+            const err = await res.json();
+            alerta('erro', err.error_description || err.msg || 'Erro ao alterar senha.');
+        }
+    } catch(e) {
+        alerta('erro', 'Erro: ' + e.message);
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle me-2"></i> Salvar nova senha';
     }
 }
 
