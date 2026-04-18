@@ -1561,6 +1561,7 @@ Escreva 2-3 frases curtas em português brasileiro informal. Seja específico co
 
         const fallbackComentario = `${perdedorNome} foi de vela! ${vencedorNome} dominou! 🎾`;
         const emailsUnicos = [...new Set(emailsJogadores)];
+        console.log('[email] Jogadores encontrados:', tipo === 'simples' ? 2 : 4, '| Emails coletados:', emailsJogadores.length, '| Unicos:', emailsUnicos.length, '| Lista:', emailsUnicos);
 
         geminiCall(promptToast).then(txt => {
             const comentario = txt || fallbackComentario;
@@ -1577,11 +1578,19 @@ Escreva 2-3 frases curtas em português brasileiro informal. Seja específico co
 
 async function enviarEmailPartida({ nomes, placar, vencedor, emails, jogador_ids, tipo, comentario_ia }) {
     const payload = JSON.stringify({ nomes, placar, vencedor, emails, jogador_ids, tipo, comentario_ia });
-    await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
+    console.log('[email] Enviando para:', emails.join(', '));
+    const res = await fetch(`${SUPA_URL}/functions/v1/enviar-email-partida`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
         body: payload
     });
+    if (!res.ok) {
+        const err = await res.text().catch(() => '');
+        console.error('[email] Erro:', res.status, err);
+        logApp('email_erro', `Falha envio email: ${res.status}`, { emails, erro: err.substring(0, 200) });
+    } else {
+        logApp('email_ok', `Email enviado para ${emails.length} destinatarios`, { emails });
+    }
 }
 
 async function carregarHistorico() {
