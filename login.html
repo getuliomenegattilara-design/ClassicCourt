@@ -302,10 +302,16 @@ logApp('login', 'App aberto', { ua: navigator.userAgent, url: location.href });
 const msgLogin = localStorage.getItem('cc_msg_login');
 if (msgLogin) { alerta('erro', msgLogin); localStorage.removeItem('cc_msg_login'); }
 
-// Verifica se ja esta logado
-const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
-if (session && session.access_token) {
-    window.location.href = 'index.html';
+// Detecta token de recovery ANTES de verificar sessão
+const _hashParams = new URLSearchParams(window.location.hash.substring(1));
+const _isRecovery = _hashParams.get('type') === 'recovery' && _hashParams.get('access_token');
+
+// Verifica se ja esta logado (pula se for recovery)
+if (!_isRecovery) {
+    const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
+    if (session && session.access_token) {
+        window.location.href = 'index.html';
+    }
 }
 
 function mostrarTab(tab) {
