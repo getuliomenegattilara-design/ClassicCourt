@@ -57,28 +57,63 @@ serve(async (req: Request) => {
     const userId = userData.user.id;
     console.log("delete-account: iniciando para user_id", userId);
 
-    // 1) Anonimiza registro em jogadores (preserva historico de partidas)
+    // 1) Anonimiza registro em jogadores (preserva historico de partidas).
+    //    CRITICO: precisa setar user_id=null pra FK liberar o delete do auth user.
+    //    Se UPDATE completo falhar (coluna inexistente), faz fallback campo a campo.
+    const camposAnonimos: Record<string, unknown> = {
+      nome: "Conta excluida",
+      apelido: null,
+      email: null,
+      telefone: null,
+      foto_url: null,
+      caracteristicas: null,
+      fofoqueiro: false,
+      user_id: null,
+    };
+
+    let anonimizou = false;
     try {
       const { error: updErr } = await admin
         .from("jogadores")
-        .update({
-          nome: "Conta excluida",
-          apelido: null,
-          email: null,
-          telefone: null,
-          foto_url: null,
-          caracteristicas: null,
-          ativo: false,
-          fofoqueiro: false,
-          user_id: null,
-        })
+        .update(camposAnonimos)
         .eq("user_id", userId);
-      if (updErr) {
-        console.error("anonimizacao jogadores falhou:", updErr);
-        // continua mesmo assim - nao bloqueia delecao do auth
+      if (!updErr) {
+        anonimizou = true;
+      } else {
+        console.error("UPDATE completo falhou:", updErr);
       }
     } catch (e) {
-      console.error("excecao anonimizacao:", e);
+      console.error("excecao UPDATE completo:", e);
+    }
+
+    // Fallback: tenta campo a campo, ignorando os que nao existem
+    if (!anonimizou) {
+      console.log("Aplicando fallback campo a campo");
+      for (const [campo, valor] of Object.entries(camposAnonimos)) {
+        try {
+          const { error: e1 } = await admin
+            .from("jogadores")
+            .update({ [campo]: valor })
+            .eq("user_id", userId);
+          if (e1) {
+            console.warn(`campo '${campo}' falhou:`, e1.message);
+          }
+        } catch (e) {
+          console.warn(`excecao campo '${campo}':`, e);
+        }
+      }
+    }
+
+    // Verifica que user_id foi efetivamente nulo (critico pro delete do auth)
+    const { data: jogadorPos } = await admin
+      .from("jogadores")
+      .select("id,user_id")
+      .eq("user_id", userId);
+    if (jogadorPos && jogadorPos.length > 0) {
+      return jsonResponse(500, {
+        error: "Falha ao desvincular jogador do auth user",
+        detail: "user_id ainda aponta pro user, FK bloquearia delete",
+      });
     }
 
     // 2) Deleta o auth user (irreversivel)
