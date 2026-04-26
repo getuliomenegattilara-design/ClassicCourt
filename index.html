@@ -1353,28 +1353,30 @@ async function salvarJogador() {
 }
 
 async function excluirMinhaConta() {
-    const meu = jogadores.find(j => j.user_id === getUserId());
-    if (!meu) { alerta('erro', 'Jogador não encontrado.'); return; }
+    const btn = event?.target?.closest('button');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Excluindo...'; }
     try {
-        // Anonimiza dados pessoais
-        await supaFetch(`jogadores?id=eq.${meu.id}`, {
-            method: 'PATCH', prefer: 'return=minimal',
-            body: JSON.stringify({
-                nome: 'Usuario Excluido',
-                email: null,
-                foto_url: null,
-                apelido: null,
-                caracteristicas: null,
-                fofoqueiro: false,
-                user_id: null
-            })
+        // Chama Edge Function que: (1) anonimiza registro em jogadores
+        // (2) deleta o usuario na Auth do Supabase. Exige token valido.
+        const res = await fetch(SUPA_URL + '/functions/v1/delete-account', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + getToken(),
+                'Content-Type': 'application/json'
+            }
         });
-        logApp('conta', 'Conta excluida', { jogador_id: meu.id });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok) {
+            throw new Error(data.error || ('HTTP ' + res.status));
+        }
+        logApp('conta', 'Conta excluida (Auth + anonimizacao)', {});
         modalExcluirConta.hide();
         localStorage.removeItem('cc_session');
+        localStorage.setItem('cc_msg_login', 'Sua conta foi excluida.');
         window.location.href = 'login.html';
     } catch(e) {
-        alerta('erro', 'Erro ao excluir: ' + e.message);
+        alerta('erro', 'Erro ao excluir conta: ' + e.message);
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-trash me-1"></i>Excluir definitivamente'; }
     }
 }
 
