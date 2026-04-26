@@ -133,49 +133,58 @@
 
     <!-- LOGIN -->
     <div id="tab-login">
-        <div class="mb-3">
-            <label class="form-label">E-mail</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="login-email" placeholder="seu@email.com">
+        <form id="form-login" onsubmit="event.preventDefault(); fazerLogin();" autocomplete="on">
+            <div class="mb-3">
+                <label class="form-label" for="login-email">E-mail</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control" id="login-email" name="email"
+                           autocomplete="username" autocapitalize="none" autocorrect="off"
+                           inputmode="email" placeholder="seu@email.com">
+                </div>
             </div>
-        </div>
-        <div class="mb-4">
-            <label class="form-label">Senha</label>
-            <div class="input-group">
-                <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter') fazerLogin()">
+            <div class="mb-4">
+                <label class="form-label" for="login-senha">Senha</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" class="form-control" id="login-senha" name="password"
+                           autocomplete="current-password" placeholder="••••••••">
+                </div>
             </div>
-        </div>
-        <button class="btn-verde" onclick="fazerLogin()" id="btn-login">
-            <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
-        </button>
+            <button type="submit" class="btn-verde" id="btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Entrar
+            </button>
+        </form>
         <div class="text-center mt-3">
-            <button class="link-btn" onclick="mostrarTab('recuperar')">Esqueci minha senha</button>
+            <button type="button" class="link-btn" onclick="mostrarTab('recuperar')">Esqueci minha senha</button>
         </div>
     </div>
 
     <!-- CADASTRO -->
-    <div id="tab-cadastro" style="display:none">
+    <form id="tab-cadastro" style="display:none" onsubmit="event.preventDefault(); fazerCadastro();" autocomplete="on">
         <div class="mb-3">
-            <label class="form-label">Nome completo</label>
+            <label class="form-label" for="cad-nome">Nome completo</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-person"></i></span>
-                <input type="text" class="form-control" id="cad-nome" placeholder="Seu nome">
+                <input type="text" class="form-control" id="cad-nome" name="name"
+                       autocomplete="name" placeholder="Seu nome">
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">E-mail</label>
+            <label class="form-label" for="cad-email">E-mail</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="cad-email" placeholder="seu@email.com">
+                <input type="email" class="form-control" id="cad-email" name="email"
+                       autocomplete="username" autocapitalize="none" autocorrect="off"
+                       inputmode="email" placeholder="seu@email.com">
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">Senha</label>
+            <label class="form-label" for="cad-senha">Senha</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control" id="cad-senha" placeholder="Mínimo 6 caracteres">
+                <input type="password" class="form-control" id="cad-senha" name="new-password"
+                       autocomplete="new-password" placeholder="Mínimo 6 caracteres">
             </div>
         </div>
         <div class="mb-3">
@@ -199,50 +208,54 @@
                 <label class="form-check-label" for="cad-fofoqueiro" style="font-size:13px"><i class="bi bi-bell me-1" style="color:var(--verde)"></i> Receber email de todos os jogos do condomínio</label>
             </div>
         </div>
-        <button class="btn-verde" onclick="fazerCadastro()" id="btn-cadastro">
+        <button type="submit" class="btn-verde" id="btn-cadastro">
             <i class="bi bi-person-plus me-2"></i> Criar conta
         </button>
-    </div>
+    </form>
 
     <!-- RECUPERAR SENHA -->
-    <div id="tab-recuperar" style="display:none">
+    <form id="tab-recuperar" style="display:none" onsubmit="event.preventDefault(); recuperarSenha();" autocomplete="on">
         <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Informe seu e-mail e enviaremos um link para redefinir sua senha.</p>
         <div class="mb-4">
-            <label class="form-label">E-mail</label>
+            <label class="form-label" for="rec-email">E-mail</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                <input type="email" class="form-control" id="rec-email" placeholder="seu@email.com">
+                <input type="email" class="form-control" id="rec-email" name="email"
+                       autocomplete="username" autocapitalize="none" autocorrect="off"
+                       inputmode="email" placeholder="seu@email.com">
             </div>
         </div>
-        <button class="btn-verde" onclick="recuperarSenha()" id="btn-recuperar">
+        <button type="submit" class="btn-verde" id="btn-recuperar">
             <i class="bi bi-send me-2"></i> Enviar link
         </button>
         <div class="text-center mt-3">
-            <button class="link-btn" onclick="mostrarTab('login')"><i class="bi bi-arrow-left me-1"></i>Voltar</button>
+            <button type="button" class="link-btn" onclick="mostrarTab('login')"><i class="bi bi-arrow-left me-1"></i>Voltar</button>
         </div>
-    </div>
+    </form>
 
     <!-- REDEFINIR SENHA -->
-    <div id="tab-redefinir" style="display:none">
+    <form id="tab-redefinir" style="display:none" onsubmit="event.preventDefault(); redefinirSenha();" autocomplete="on">
         <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Digite sua nova senha.</p>
         <div class="mb-3">
-            <label class="form-label">Nova senha</label>
+            <label class="form-label" for="nova-senha">Nova senha</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control" id="nova-senha" placeholder="Minimo 6 caracteres">
+                <input type="password" class="form-control" id="nova-senha" name="new-password"
+                       autocomplete="new-password" placeholder="Minimo 6 caracteres">
             </div>
         </div>
         <div class="mb-4">
-            <label class="form-label">Confirmar senha</label>
+            <label class="form-label" for="confirma-senha">Confirmar senha</label>
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                <input type="password" class="form-control" id="confirma-senha" placeholder="Repita a senha">
+                <input type="password" class="form-control" id="confirma-senha" name="confirm-password"
+                       autocomplete="new-password" placeholder="Repita a senha">
             </div>
         </div>
-        <button class="btn-verde" onclick="redefinirSenha()" id="btn-redefinir">
+        <button type="submit" class="btn-verde" id="btn-redefinir">
             <i class="bi bi-check-circle me-2"></i> Salvar nova senha
         </button>
-    </div>
+    </form>
 
 </div>
 
@@ -307,10 +320,18 @@ const _hashParams = new URLSearchParams(window.location.hash.substring(1));
 const _isRecovery = _hashParams.get('type') === 'recovery' && _hashParams.get('access_token');
 
 // Verifica se ja esta logado (pula se for recovery)
+// Se sessao expirou mas tem refresh_token, tenta renovar antes de pedir senha
 if (!_isRecovery) {
     const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
     if (session && session.access_token) {
-        window.location.href = 'index.html';
+        if (sessaoExpirada()) {
+            refrescarSessao().then(ok => {
+                if (ok) window.location.href = 'index.html';
+                else localStorage.removeItem('cc_session');
+            });
+        } else {
+            window.location.href = 'index.html';
+        }
     }
 }
 
@@ -354,7 +375,11 @@ async function fazerLogin() {
     btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Entrando...';
     try {
         const data = await authFetch('token?grant_type=password', { email, password: senha });
-        localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
+        localStorage.setItem('cc_session', JSON.stringify({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+            user: data.user
+        }));
         logApp('login', 'Login efetuado', { email });
         window.location.href = 'index.html';
     } catch(e) {
@@ -392,7 +417,11 @@ async function fazerCadastro() {
             return;
         }
 
-        localStorage.setItem('cc_session', JSON.stringify({ access_token: data.access_token, user: data.user }));
+        localStorage.setItem('cc_session', JSON.stringify({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+            user: data.user
+        }));
 
         // Cria jogador usando o token diretamente (sem supaFetch para evitar checagem de sessão)
         const payload = { nome, email, user_id: data.user.id, sexo, fofoqueiro, caracteristicas };

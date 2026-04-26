@@ -23,21 +23,48 @@ function sessaoExpirada() {
     } catch(e) { return true; }
 }
 
+async function refrescarSessao() {
+    const session = JSON.parse(localStorage.getItem('cc_session') || 'null');
+    if (!session?.refresh_token) return false;
+    try {
+        const res = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
+            method: 'POST',
+            headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: session.refresh_token })
+        });
+        if (!res.ok) return false;
+        const data = await res.json();
+        if (!data.access_token) return false;
+        localStorage.setItem('cc_session', JSON.stringify({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token || session.refresh_token,
+            user: data.user || session.user
+        }));
+        return true;
+    } catch(e) { return false; }
+}
+
 function expirarSessao() {
     localStorage.removeItem('cc_session');
     localStorage.setItem('cc_msg_login', 'Sua sessão expirou. Faça login novamente.');
     window.location.href = 'login.html';
 }
 
-// Verifica expiração ao voltar para a aba
-document.addEventListener('visibilitychange', () => {
+// Verifica expiração ao voltar para a aba — tenta renovar antes de chutar pro login
+document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'visible' && !window.location.href.includes('login.html')) {
-        if (sessaoExpirada()) expirarSessao();
+        if (sessaoExpirada()) {
+            const ok = await refrescarSessao();
+            if (!ok) expirarSessao();
+        }
     }
 });
 
 async function supaFetch(path, options = {}) {
-    if (sessaoExpirada()) { expirarSessao(); return; }
+    if (sessaoExpirada()) {
+        const ok = await refrescarSessao();
+        if (!ok) { expirarSessao(); return; }
+    }
     const res = await fetch(SUPA_URL + '/rest/v1/' + path, {
         ...options,
         headers: {
@@ -48,7 +75,14 @@ async function supaFetch(path, options = {}) {
             ...(options.headers || {})
         }
     });
-    if (res.status === 401) { expirarSessao(); return; }
+    if (res.status === 401) {
+        const ok = await refrescarSessao();
+        if (ok) {
+            return supaFetch(path, options);
+        }
+        expirarSessao();
+        return;
+    }
     const text = await res.text();
     if (!text) return null;
     const data = JSON.parse(text);
