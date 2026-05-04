@@ -2,8 +2,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { encode as b64encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
-const GMAIL_USER = "getuliomenegattilara@gmail.com";
-const GMAIL_APP_PASSWORD = "xdkioytsquuzcnrl";
+const GMAIL_USER = Deno.env.get("GMAIL_USER") ?? "getuliomenegattilara@gmail.com";
+const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD") ?? "";
+
+if (!GMAIL_APP_PASSWORD) {
+  console.error("GMAIL_APP_PASSWORD nao configurada — email nao sera enviado");
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
